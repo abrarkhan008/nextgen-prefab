@@ -1,0 +1,8 @@
+{
+  "appId": "com.nextgenprefab.billing",
+  "appName": "NextGen Pre Fab",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

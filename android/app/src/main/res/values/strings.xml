@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NextGen Pre Fab</string>
+    <string name="title_activity_main">NextGen Pre Fab</string>
+    <string name="package_name">com.nextgenprefab.billing</string>
+    <string name="custom_url_scheme">com.nextgenprefab.billing</string>
+</resources>
