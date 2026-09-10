@@ -10,7 +10,7 @@ import {
 } from "./common";
 import { amountInWords } from "../numberToWords";
 import { gstSummary, sumItems } from "../calc";
-import { drawLogo, drawSignatureStamp, drawWatermark } from "./pdfBranding";
+import { drawSignatureStamp, drawWatermark } from "./pdfBranding";
 
 // A4 page height in mm (jsPDF default unit here is "mm", format "a4").
 // Defined locally so this file works even if common.js doesn't export it.
@@ -72,7 +72,7 @@ function pageNumber(pdf, n) {
 function pageHeader(pdf, company, title) {
   drawWatermark(pdf);
   const y = drawCompanyHeader(pdf, company, title || "");
-  drawLogo(pdf, company);
+
   return y;
 }
 

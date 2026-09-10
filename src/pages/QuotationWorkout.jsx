@@ -29,6 +29,8 @@ import StripDiagram from "../components/StripDiagram";
 import MemberDiagram from "../components/MemberDiagram";
 import FoundationBoltDiagram from "../components/FoundationBoltDiagram";
 import ConnectionPlateDiagram from "../components/ConnectionPlateDiagram";
+import { emptyItem } from "../components/ItemsTable";
+import BuildingPlanForm from "../components/BuildingPlanForm";
 
 // Same formulas already used in QuotationEditor.jsx, repeated here so this
 // page shows the identical numbers without importing a page component.
@@ -201,122 +203,105 @@ function MemberRowCard({ row, onChange, onRemove }) {
       <p className="pt-1 text-xs font-bold text-steel-600">
         Connection Plates (optional)
       </p>
-    {row.plates.map((p, idx) => (
-  <div
-    key={idx}
-    className="border-t border-steel-200 pt-1.5"
-  >
-    <div className="flex gap-3">
+      {row.plates.map((p, idx) => (
+        <div key={idx} className="border-t border-steel-200 pt-1.5">
+          <div className="flex gap-3">
+            {/* LEFT SIDE - CONNECTION PLATE INPUTS */}
+            <div className="flex-1 space-y-1.5">
+              <div>
+                <label className="field-label">1. Length (m)</label>
+                <input
+                  type="number"
+                  className="field-input"
+                  value={p.length}
+                  onChange={(e) =>
+                    updatePlate(idx, {
+                      length: e.target.value,
+                    })
+                  }
+                />
+              </div>
 
-      {/* LEFT SIDE - CONNECTION PLATE INPUTS */}
-      <div className="flex-1 space-y-1.5">
+              <div>
+                <label className="field-label">2. Width (mm)</label>
+                <input
+                  type="number"
+                  className="field-input"
+                  value={p.width}
+                  onChange={(e) =>
+                    updatePlate(idx, {
+                      width: e.target.value,
+                    })
+                  }
+                />
+              </div>
 
-        <div>
-          <label className="field-label">
-            1. Length (m)
-          </label>
-          <input
-            type="number"
-            className="field-input"
-            value={p.length}
-            onChange={(e) =>
-              updatePlate(idx, {
-                length: e.target.value,
-              })
-            }
-          />
+              <div>
+                <label className="field-label">3. Thickness (mm)</label>
+                <input
+                  type="number"
+                  className="field-input"
+                  value={p.thickness}
+                  onChange={(e) =>
+                    updatePlate(idx, {
+                      thickness: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="field-label">4. No. of Plates</label>
+                <input
+                  type="number"
+                  className="field-input"
+                  value={p.qty}
+                  onChange={(e) =>
+                    updatePlate(idx, {
+                      qty: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* RIGHT SIDE - VERTICAL CONNECTION PLATE DIAGRAM */}
+            <div className="flex w-24 shrink-0 items-center justify-center">
+              <ConnectionPlateDiagram />
+            </div>
+          </div>
+
+          {/* DENSITY + REMOVE */}
+          <div className="mt-2 flex items-center gap-2">
+            <div className="flex-1">
+              <label className="field-label">
+                Density (edit if not 0.00785)
+              </label>
+
+              <input
+                type="number"
+                step="0.00001"
+                className="field-input"
+                value={p.density}
+                onChange={(e) =>
+                  updatePlate(idx, {
+                    density: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <button
+              className="text-xs font-bold text-red-500"
+              onClick={() => removePlate(idx)}
+            >
+              Remove Plate
+            </button>
+          </div>
         </div>
+      ))}
 
-        <div>
-          <label className="field-label">
-            2. Width (mm)
-          </label>
-          <input
-            type="number"
-            className="field-input"
-            value={p.width}
-            onChange={(e) =>
-              updatePlate(idx, {
-                width: e.target.value,
-              })
-            }
-          />
-        </div>
-
-        <div>
-          <label className="field-label">
-            3. Thickness (mm)
-          </label>
-          <input
-            type="number"
-            className="field-input"
-            value={p.thickness}
-            onChange={(e) =>
-              updatePlate(idx, {
-                thickness: e.target.value,
-              })
-            }
-          />
-        </div>
-
-        <div>
-          <label className="field-label">
-            4. No. of Plates
-          </label>
-          <input
-            type="number"
-            className="field-input"
-            value={p.qty}
-            onChange={(e) =>
-              updatePlate(idx, {
-                qty: e.target.value,
-              })
-            }
-          />
-        </div>
-
-      </div>
-
-      {/* RIGHT SIDE - VERTICAL CONNECTION PLATE DIAGRAM */}
-      <div className="flex w-24 shrink-0 items-center justify-center">
-        <ConnectionPlateDiagram />
-      </div>
-
-    </div>
-
-    {/* DENSITY + REMOVE */}
-    <div className="mt-2 flex items-center gap-2">
-
-      <div className="flex-1">
-        <label className="field-label">
-          Density (edit if not 0.00785)
-        </label>
-
-        <input
-          type="number"
-          step="0.00001"
-          className="field-input"
-          value={p.density}
-          onChange={(e) =>
-            updatePlate(idx, {
-              density: e.target.value,
-            })
-          }
-        />
-      </div>
-
-      <button
-        className="text-xs font-bold text-red-500"
-        onClick={() => removePlate(idx)}
-      >
-        Remove Plate
-      </button>
-
-    </div>
-  </div>
-))}
-
-          {/* RIGHT SIDE - CONNECTION PLATE DIAGRAM
+      {/* RIGHT SIDE - CONNECTION PLATE DIAGRAM
           <div className="flex w-32 shrink-0 items-center justify-center">
             <ConnectionPlateDiagram />
           </div>
@@ -668,6 +653,7 @@ export default function QuotationWorkout() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [doc_, setDoc] = useState(null);
+  const [showPlanForm, setShowPlanForm] = useState(false);
 
   useEffect(() => {
     const existing = getDocument(id);
@@ -718,6 +704,140 @@ export default function QuotationWorkout() {
     0,
   );
   const grandTotal = foundationWeight + purlinWeight + sectionsTotal;
+  // Fills workout sections automatically based on simple building
+  // dimensions. Edit the numbers marked "ADJUST" below to match your
+  // company's standard practice — these are simple starting formulas.
+  const applyBuildingPlan = (plan) => {
+    const length = Number(plan.length) || 0;
+    const width = Number(plan.width) || 0;
+    const height = Number(plan.height) || 0;
+    const baySpacing = Number(plan.baySpacing) || 6; // ADJUST default
+    const purlinSpacing = Number(plan.purlinSpacing) || 1.2; // ADJUST default
+    const xBracingBays = Number(plan.xBracingBays) || 0;
+
+    const numberOfBays = baySpacing ? Math.round(length / baySpacing) : 0;
+    const numberOfFrames = numberOfBays + 1; // frames at each bay division
+
+    // Rough rafter length from slope ratio, e.g. "1:10"
+    const slopeParts = (plan.slopeRatio || "1:10").split(":").map(Number);
+    const riseRatio = slopeParts[1] ? slopeParts[0] / slopeParts[1] : 0.1;
+    const halfSpan = width / 2;
+    const rafterLength = Math.sqrt(
+      halfSpan * halfSpan + (halfSpan * riseRatio) ** 2,
+    );
+
+    // ---- Pillars: 2 per frame ----
+    const pillarRows = Array.from({ length: numberOfFrames * 2 }, (_, i) => ({
+      ...emptyMemberRow(`C${i + 1}`),
+      flangeWidth: "150", // ADJUST default section size
+      flangeThick: "5",
+      webWidth: "200",
+      webThick: "5",
+      length: String(height),
+      qty: "1",
+    }));
+
+    // ---- Rafters: 2 slopes per frame ----
+    const rafterRows = Array.from({ length: numberOfFrames * 2 }, (_, i) => ({
+      ...emptyMemberRow(`R${i + 1}`),
+      flangeWidth: "150", // ADJUST default section size
+      flangeThick: "5",
+      webWidth: "200",
+      webThick: "5",
+      length: rafterLength.toFixed(2),
+      qty: "1",
+    }));
+
+    // ---- X Bracing: 2 diagonals per braced bay ----
+    const xBracingRows = Array.from({ length: xBracingBays * 2 }, (_, i) => ({
+      ...emptyBracingRow(`XB${i + 1}`),
+      type: "Rod Bracing",
+      size: "16", // ADJUST default rod size (mm)
+      qty: "1",
+    }));
+
+    // ---- Purlin: quantity and length from slope + spacing ----
+    const purlinLinesPerSlope = purlinSpacing
+      ? Math.ceil(rafterLength / purlinSpacing)
+      : 0;
+    const purlinQty = purlinLinesPerSlope * 2 * numberOfBays; // 2 slopes x bays
+
+    const next = {
+      ...doc_,
+      workout: {
+        ...doc_.workout,
+        pillars: pillarRows,
+        rafters: rafterRows,
+        xBracing: xBracingRows,
+      },
+      project: {
+        ...doc_.project,
+        length: String(length),
+        width: String(width),
+        height: String(height),
+        purlin: {
+          ...doc_.project.purlin,
+          length: String(baySpacing),
+          qty: String(purlinQty),
+        },
+      },
+    };
+
+    setDoc(next);
+    saveDocument(next);
+    setShowPlanForm(false);
+    alert("Workout filled from Building Plan. You can edit any row now.");
+  };
+  const pushWorkoutToItems = () => {
+    const rate = Number(doc_.steelRate) || 0;
+    const newItems = [];
+
+    if (foundationWeight) {
+      const row = emptyItem();
+      row.description = "FOUNDATION BOLT";
+      row.qty = foundationWeight;
+      row.unit = "KGS";
+      row.rate = rate;
+      row.amount = foundationWeight * rate;
+      newItems.push(row);
+    }
+
+    SECTIONS.forEach((section) => {
+      (doc_.workout[section.key] || []).forEach((r) => {
+        const w =
+          section.key === "boltsNuts"
+            ? boltRowWeight(r)
+            : section.type === SECTION_TYPES.MEMBER
+            ? memberRowWeight(r)
+            : section.type === SECTION_TYPES.BRACING
+            ? bracingTotalWeight(r)
+            : rateRowWeight(r);
+        if (!w) return;
+        const row = emptyItem();
+        row.description = `${r.label || section.prefix} (${section.title})`;
+        row.qty = w;
+        row.unit = "KGS";
+        row.rate = rate;
+        row.amount = w * rate;
+        newItems.push(row);
+      });
+    });
+
+    if (purlinWeight) {
+      const row = emptyItem();
+      row.description = "PURLIN";
+      row.qty = purlinWeight;
+      row.unit = "KGS";
+      row.rate = rate;
+      row.amount = purlinWeight * rate;
+      newItems.push(row);
+    }
+
+    const next = { ...doc_, items: newItems };
+    setDoc(next);
+    saveDocument(next);
+    alert("Items updated in Quotation from Workout!");
+  };
 
   return (
     <div className="min-h-full bg-steel-50 pb-28">
@@ -993,12 +1113,27 @@ export default function QuotationWorkout() {
           </button>
         </div>
         <button
+          className="btn-accent w-full"
+          onClick={() => setShowPlanForm(true)}
+        >
+          📋 Generate from Building Plan
+        </button>
+        <button className="btn-secondary w-full" onClick={pushWorkoutToItems}>
+          ⬆️ Push Weights to Quotation Items
+        </button>
+        <button
           className="btn-secondary w-full"
           onClick={() => navigate(`/quotation/${id}`)}
         >
           Continue to Quotation / Pricing →
         </button>
       </div>
+      {showPlanForm && (
+        <BuildingPlanForm
+          onClose={() => setShowPlanForm(false)}
+          onGenerate={applyBuildingPlan}
+        />
+      )}
     </div>
   );
 }

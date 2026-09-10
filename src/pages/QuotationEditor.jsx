@@ -467,7 +467,11 @@ export default function QuotationEditor() {
 
   const handleSave = async () => {
     saveDocument(doc_);
-    if (id === "new") navigate(`/quotation/${doc_.id}`, { replace: true });
+    if (id === "new") {
+      navigate(`/quotation/${doc_.id}`, { replace: true });
+    } else {
+      alert("Quotation saved successfully");
+    }
   };
   const handleDownload = async () => {
     saveDocument(doc_);
@@ -675,7 +679,7 @@ export default function QuotationEditor() {
           </p>
         </div>
 
-        <div className="space-y-3">
+        {/* <div className="space-y-3">
           <p className="text-sm font-bold text-steel-800">Pillars (Columns)</p>
           {["c1", "c2", "c3"].map((k) => {
             const r = memberRows(
@@ -710,9 +714,9 @@ export default function QuotationEditor() {
               </div>
             );
           })}
-        </div>
+        </div> */}
 
-        <div className="space-y-3">
+        {/* <div className="space-y-3">
           <p className="text-sm font-bold text-steel-800">Rafters</p>
           {["r1", "r2", "r3", "r4", "r5"].map((k) => {
             const r = memberRows(
@@ -747,10 +751,10 @@ export default function QuotationEditor() {
               </div>
             );
           })}
-        </div>
+        </div> */}
 
         {/* ================= Other Flange+Web Members ================= */}
-        <div className="card space-y-3">
+        {/* <div className="card space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold text-steel-800">
               Other Members (Truss / Adapter / Beams)
@@ -812,10 +816,10 @@ export default function QuotationEditor() {
               </div>
             );
           })}
-        </div>
+        </div> */}
 
         {/* ================= Plate Items ================= */}
-        <div className="card space-y-3">
+        {/* <div className="card space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold text-steel-800">Plate Items</p>
             <button
@@ -831,28 +835,29 @@ export default function QuotationEditor() {
               HR Plate
             </p>
           )}
-          {(doc_.project.plates || []).map((p) => (
-            <div
-              key={p.id}
-              className="space-y-1.5 rounded-lg border border-steel-200 p-2"
-            >
-              <div className="flex items-center gap-2">
-                <input
-                  className="field-input flex-1"
-                  placeholder="Label, e.g. PILLAR BOTTOM PLATE"
-                  value={p.label}
-                  onChange={(e) =>
-                    updateRow("plates", p.id, { label: e.target.value })
-                  }
-                />
-                <button
-                  className="text-xs font-bold text-red-500"
-                  onClick={() => removeRow("plates", p.id)}
-                >
-                  Remove
-                </button>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
+       {(doc_.project.plates || []).map((p) => (
+  <div
+    key={p.id}
+    className="space-y-1.5 rounded-lg border border-steel-200 p-2"
+  >
+    <div className="flex items-center gap-2">
+      <input
+        className="field-input flex-1"
+        placeholder="Label, e.g. PILLAR BOTTOM PLATE"
+        value={p.label}
+        onChange={(e) =>
+          updateRow("plates", p.id, { label: e.target.value })
+        }
+      />
+      <button
+        className="text-xs font-bold text-red-500"
+        onClick={() => removeRow("plates", p.id)}
+      >
+        Remove
+      </button>
+    </div>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+      <div className="grid flex-1 grid-cols-4 gap-2">
                 <div>
                   <label className="field-label">Width (mm)</label>
                   <input
@@ -886,7 +891,7 @@ export default function QuotationEditor() {
                     }
                   />
                 </div>
-                <div>
+                                <div>
                   <label className="field-label">Qty</label>
                   <input
                     type="number"
@@ -898,6 +903,10 @@ export default function QuotationEditor() {
                   />
                 </div>
               </div>
+              <div className="flex w-full items-center justify-center sm:w-32">
+                <ConnectionPlateDiagram />
+              </div>
+            </div>
               <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
                 Computed Weight:{" "}
                 {plateWeight(p).toLocaleString("en-IN", {
@@ -913,9 +922,9 @@ export default function QuotationEditor() {
               </button>
             </div>
           ))}
-        </div>
+        </div> */}
 
-        <div className="card space-y-3">
+        {/* <div className="card space-y-3">
           <p className="text-sm font-bold text-steel-800">
             Purlins &amp; Roof Cladding
           </p>
@@ -1030,9 +1039,9 @@ export default function QuotationEditor() {
               }
             />
           </div>
-        </div>
+        </div> */}
 
-        <div className="card space-y-3">
+        {/* <div className="card space-y-3">
           <p className="text-sm font-bold text-steel-800">Foundation Bolts</p>
           <div className="grid grid-cols-3 gap-2">
             <div>
@@ -1086,10 +1095,10 @@ export default function QuotationEditor() {
           >
             + Add computed weight to items
           </button>
-        </div>
+        </div> */}
 
         {/* ================= NEW: Bracing (Rod / Pipe / Rope) ================= */}
-        <div className="card space-y-3">
+        {/* <div className="card space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold text-steel-800">Bracing</p>
             <button
@@ -1240,10 +1249,10 @@ export default function QuotationEditor() {
               </div>
             );
           })}
-        </div>
+        </div> */}
 
         {/* ================= Generic Rate x Qty Weight Items ================= */}
-        <div className="card space-y-3">
+        {/* <div className="card space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold text-steel-800">
               Cleats / Stiffeners / Sag Rods
@@ -1333,7 +1342,7 @@ export default function QuotationEditor() {
               </button>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* ================= NEW: Specifications (matches PDF page 3) ================= */}
         <div className="card space-y-3">

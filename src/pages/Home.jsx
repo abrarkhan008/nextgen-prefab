@@ -16,6 +16,12 @@ const TYPE_META = {
     icon: "🧾",
     path: "/invoice",
   },
+  estimation: {
+    label: "Estimation",
+    color: "bg-indigo-700",
+    icon: "📝",
+    path: "/estimation",
+  },
 };
 
 export default function Home() {

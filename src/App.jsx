@@ -10,6 +10,7 @@ import DCEditor from "./pages/DCEditor";
 import InvoiceEditor from "./pages/InvoiceEditor";
 import PaymentHistory from "./pages/PaymentHistory";
 import GstPayment from "./pages/GstPayment";
+import EstimationEditor from "./pages/EstimationEditor";
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/invoice/:id" element={<InvoiceEditor />} />
           <Route path="/payments" element={<PaymentHistory />} />
           <Route path="/gst" element={<GstPayment />} />
+          <Route path="/estimation/:id" element={<EstimationEditor />} />
         </Routes>
       </div>
     </HashRouter>
