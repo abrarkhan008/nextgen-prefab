@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import { getDocument, saveDocument } from "../utils/storage";
+
 import {
   SECTIONS,
   SECTION_TYPES,
@@ -22,6 +23,12 @@ import {
   bracingTotalWeight,
   purlinSectionWeight,
 } from "../utils/calc";
+import BoltDiagram from "../components/BoltDiagram";
+import BracingDiagram from "../components/BracingDiagram";
+import StripDiagram from "../components/StripDiagram";
+import MemberDiagram from "../components/MemberDiagram";
+import FoundationBoltDiagram from "../components/FoundationBoltDiagram";
+import ConnectionPlateDiagram from "../components/ConnectionPlateDiagram";
 
 // Same formulas already used in QuotationEditor.jsx, repeated here so this
 // page shows the identical numbers without importing a page component.
@@ -68,7 +75,7 @@ function MemberRowCard({ row, onChange, onRemove }) {
         </button>
       </div>
 
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <div>
           <label className="field-label">Flange Width (mm)</label>
           <input
@@ -123,74 +130,198 @@ function MemberRowCard({ row, onChange, onRemove }) {
             onChange={(e) => set({ qty: e.target.value })}
           />
         </div>
+      </div> */}
+      <div className="flex gap-3">
+        <div className="flex-1 space-y-2">
+          <div>
+            <label className="field-label">Flange Width (mm)</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.flangeWidth}
+              onChange={(e) => set({ flangeWidth: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Flange Thick (mm)</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.flangeThick}
+              onChange={(e) => set({ flangeThick: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Web Width (mm)</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.webWidth}
+              onChange={(e) => set({ webWidth: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Web Thick (mm)</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.webThick}
+              onChange={(e) => set({ webThick: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Length (m)</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.length}
+              onChange={(e) => set({ length: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Qty</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.qty}
+              onChange={(e) => set({ qty: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="flex w-32 items-center justify-center">
+          <MemberDiagram />
+        </div>
       </div>
       <p className="pt-1 text-xs font-bold text-steel-600">
         Connection Plates (optional)
       </p>
-      {row.plates.map((p, idx) => (
-        <div key={idx} className="space-y-1.5 border-t border-steel-200 pt-1.5">
-          <div className="grid grid-cols-4 gap-2">
-            <div>
-              <label className="field-label">Length (m)</label>
-              <input
-                type="number"
-                className="field-input"
-                value={p.length}
-                onChange={(e) => updatePlate(idx, { length: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="field-label">Width (mm)</label>
-              <input
-                type="number"
-                className="field-input"
-                value={p.width}
-                onChange={(e) => updatePlate(idx, { width: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="field-label">Thickness (mm)</label>
-              <input
-                type="number"
-                className="field-input"
-                value={p.thickness}
-                onChange={(e) =>
-                  updatePlate(idx, { thickness: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="field-label">No. of Plates</label>
-              <input
-                type="number"
-                className="field-input"
-                value={p.qty}
-                onChange={(e) => updatePlate(idx, { qty: e.target.value })}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <label className="field-label">
-                Density (edit if not 0.00785)
-              </label>
-              <input
-                type="number"
-                step="0.00001"
-                className="field-input"
-                value={p.density}
-                onChange={(e) => updatePlate(idx, { density: e.target.value })}
-              />
-            </div>
-            <button
-              className="text-xs font-bold text-red-500"
-              onClick={() => removePlate(idx)}
-            >
-              Remove Plate
-            </button>
+    {row.plates.map((p, idx) => (
+  <div
+    key={idx}
+    className="border-t border-steel-200 pt-1.5"
+  >
+    <div className="flex gap-3">
+
+      {/* LEFT SIDE - CONNECTION PLATE INPUTS */}
+      <div className="flex-1 space-y-1.5">
+
+        <div>
+          <label className="field-label">
+            1. Length (m)
+          </label>
+          <input
+            type="number"
+            className="field-input"
+            value={p.length}
+            onChange={(e) =>
+              updatePlate(idx, {
+                length: e.target.value,
+              })
+            }
+          />
+        </div>
+
+        <div>
+          <label className="field-label">
+            2. Width (mm)
+          </label>
+          <input
+            type="number"
+            className="field-input"
+            value={p.width}
+            onChange={(e) =>
+              updatePlate(idx, {
+                width: e.target.value,
+              })
+            }
+          />
+        </div>
+
+        <div>
+          <label className="field-label">
+            3. Thickness (mm)
+          </label>
+          <input
+            type="number"
+            className="field-input"
+            value={p.thickness}
+            onChange={(e) =>
+              updatePlate(idx, {
+                thickness: e.target.value,
+              })
+            }
+          />
+        </div>
+
+        <div>
+          <label className="field-label">
+            4. No. of Plates
+          </label>
+          <input
+            type="number"
+            className="field-input"
+            value={p.qty}
+            onChange={(e) =>
+              updatePlate(idx, {
+                qty: e.target.value,
+              })
+            }
+          />
+        </div>
+
+      </div>
+
+      {/* RIGHT SIDE - VERTICAL CONNECTION PLATE DIAGRAM */}
+      <div className="flex w-24 shrink-0 items-center justify-center">
+        <ConnectionPlateDiagram />
+      </div>
+
+    </div>
+
+    {/* DENSITY + REMOVE */}
+    <div className="mt-2 flex items-center gap-2">
+
+      <div className="flex-1">
+        <label className="field-label">
+          Density (edit if not 0.00785)
+        </label>
+
+        <input
+          type="number"
+          step="0.00001"
+          className="field-input"
+          value={p.density}
+          onChange={(e) =>
+            updatePlate(idx, {
+              density: e.target.value,
+            })
+          }
+        />
+      </div>
+
+      <button
+        className="text-xs font-bold text-red-500"
+        onClick={() => removePlate(idx)}
+      >
+        Remove Plate
+      </button>
+
+    </div>
+  </div>
+))}
+
+          {/* RIGHT SIDE - CONNECTION PLATE DIAGRAM
+          <div className="flex w-32 shrink-0 items-center justify-center">
+            <ConnectionPlateDiagram />
           </div>
         </div>
-      ))}
+      ))} */}
       <button
         className="btn-secondary w-full py-1.5 text-xs"
         onClick={addPlate}
@@ -226,55 +357,115 @@ function RateRowCard({ row, section, onChange, onRemove }) {
           Remove
         </button>
       </div>
-      <div
-        className={`grid gap-2 ${
-          section?.hasThickness ? "grid-cols-4" : "grid-cols-3"
-        }`}
-      >
-        <div>
-          <label className="field-label">{qtyLabel}</label>
-          <input
-            type="number"
-            className="field-input"
-            value={row.qty}
-            onChange={(e) => set({ qty: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="field-label">Unit</label>
-          <input
-            className="field-input"
-            value={row.unit}
-            onChange={(e) => set({ unit: e.target.value })}
-          />
-        </div>
-        {section?.hasThickness && (
+
+      <div className="flex gap-3">
+        <div className="flex-1 space-y-2">
           <div>
-            <label className="field-label">Thickness (mm)</label>
+            <label className="field-label">{qtyLabel}</label>
             <input
               type="number"
               className="field-input"
-              value={row.thickness}
-              onChange={(e) => set({ thickness: e.target.value })}
+              value={row.qty}
+              onChange={(e) => set({ qty: e.target.value })}
             />
           </div>
-        )}
-        <div>
-          <label className="field-label">Weight / Unit (kg)</label>
-          <input
-            type="number"
-            className="field-input"
-            value={row.weightPerUnit}
-            onChange={(e) => set({ weightPerUnit: e.target.value })}
-          />
+          <div>
+            <label className="field-label">Unit</label>
+            <input
+              className="field-input"
+              value={row.unit}
+              onChange={(e) => set({ unit: e.target.value })}
+            />
+          </div>
+          {section?.hasThickness && (
+            <div>
+              <label className="field-label">1. Thickness (mm)</label>
+              <input
+                type="number"
+                className="field-input"
+                value={row.thickness}
+                onChange={(e) => set({ thickness: e.target.value })}
+              />
+            </div>
+          )}
+          <div>
+            <label className="field-label">Weight / Unit (kg)</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.weightPerUnit}
+              onChange={(e) => set({ weightPerUnit: e.target.value })}
+            />
+          </div>
         </div>
+
+        {section?.hasThickness && (
+          <div className="flex items-center justify-center">
+            <StripDiagram />
+          </div>
+        )}
       </div>
+
       <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
         Computed Weight: {fmt(weight)} KG
       </div>
     </div>
   );
 }
+// function SagRodRowCard({ row, onChange, onRemove }) {
+//   const size = Number(row.size) || 0;
+//   const qty = Number(row.qty) || 0;
+
+//   const weightPerPiece = (size * size) / 162;
+//   const totalWeight = weightPerPiece * qty;
+
+//   const set = (patch) => onChange({ ...row, ...patch });
+
+//   return (
+//     <div className="space-y-1.5 rounded-lg border border-steel-200 p-2">
+//       <div className="flex items-center gap-2">
+//         <input
+//           className="field-input flex-1"
+//           placeholder="Label, e.g. SR1"
+//           value={row.label}
+//           onChange={(e) => set({ label: e.target.value })}
+//         />
+
+//         <button className="text-xs font-bold text-red-500" onClick={onRemove}>
+//           Remove
+//         </button>
+//       </div>
+
+//       <div className="grid grid-cols-2 gap-2">
+//         <div>
+//           <label className="field-label">Size (mm)</label>
+//           <input
+//             type="number"
+//             className="field-input"
+//             value={row.size || ""}
+//             onChange={(e) => set({ size: e.target.value })}
+//           />
+//         </div>
+
+//         <div>
+//           <label className="field-label">Qty</label>
+//           <input
+//             type="number"
+//             className="field-input"
+//             value={row.qty}
+//             onChange={(e) => set({ qty: e.target.value })}
+//           />
+//         </div>
+//       </div>
+
+//       <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
+//         Weight / Piece: {fmt(weightPerPiece)} KG
+//         <br />
+//         Total Weight: {fmt(totalWeight)} KG
+//       </div>
+//     </div>
+//   );
+// }
 function SagRodRowCard({ row, onChange, onRemove }) {
   const size = Number(row.size) || 0;
   const qty = Number(row.qty) || 0;
@@ -293,31 +484,34 @@ function SagRodRowCard({ row, onChange, onRemove }) {
           value={row.label}
           onChange={(e) => set({ label: e.target.value })}
         />
-
         <button className="text-xs font-bold text-red-500" onClick={onRemove}>
           Remove
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="field-label">Size (mm)</label>
-          <input
-            type="number"
-            className="field-input"
-            value={row.size || ""}
-            onChange={(e) => set({ size: e.target.value })}
-          />
+      <div className="flex gap-3">
+        <div className="flex-1 space-y-2">
+          <div>
+            <label className="field-label">1. Size (mm)</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.size || ""}
+              onChange={(e) => set({ size: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="field-label">Qty</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.qty}
+              onChange={(e) => set({ qty: e.target.value })}
+            />
+          </div>
         </div>
-
-        <div>
-          <label className="field-label">Qty</label>
-          <input
-            type="number"
-            className="field-input"
-            value={row.qty}
-            onChange={(e) => set({ qty: e.target.value })}
-          />
+        <div className="flex items-center justify-center">
+          <BracingDiagram type="Rod Bracing" />
         </div>
       </div>
 
@@ -329,7 +523,6 @@ function SagRodRowCard({ row, onChange, onRemove }) {
     </div>
   );
 }
-
 function BoltRowCard({ row, onChange, onRemove }) {
   const weight = boltRowWeight(row);
   const set = (patch) => onChange({ ...row, ...patch });
@@ -348,33 +541,38 @@ function BoltRowCard({ row, onChange, onRemove }) {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <div>
-          <label className="field-label">Diameter d (mm)</label>
-          <input
-            type="number"
-            className="field-input"
-            value={row.d}
-            onChange={(e) => set({ d: e.target.value })}
-          />
+      <div className="flex gap-3">
+        <div className="flex-1 space-y-2">
+          <div>
+            <label className="field-label">1. Diameter d (mm)</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.d}
+              onChange={(e) => set({ d: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="field-label">2. Length l (mm)</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.l}
+              onChange={(e) => set({ l: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="field-label">Qty</label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.qty}
+              onChange={(e) => set({ qty: e.target.value })}
+            />
+          </div>
         </div>
-        <div>
-          <label className="field-label">Length l (mm)</label>
-          <input
-            type="number"
-            className="field-input"
-            value={row.l}
-            onChange={(e) => set({ l: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="field-label">Qty</label>
-          <input
-            type="number"
-            className="field-input"
-            value={row.qty}
-            onChange={(e) => set({ qty: e.target.value })}
-          />
+        <div className="flex items-center justify-center">
+          <BoltDiagram />
         </div>
       </div>
 
@@ -419,10 +617,12 @@ function BracingRowCard({ row, onChange, onRemove }) {
         </select>
       </div>
 
-      {row.type === "Pipe Bracing" ? (
-        <div className="grid grid-cols-3 gap-2">
+      <div className="flex gap-3">
+        <div className="flex-1 space-y-2">
           <div>
-            <label className="field-label">Size / OD (mm)</label>
+            <label className="field-label">
+              1. Size / Dia {row.type === "Pipe Bracing" ? "(OD)" : ""} (mm)
+            </label>
             <input
               type="number"
               className="field-input"
@@ -430,15 +630,17 @@ function BracingRowCard({ row, onChange, onRemove }) {
               onChange={(e) => set({ size: e.target.value })}
             />
           </div>
-          <div>
-            <label className="field-label">Thickness (mm)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={row.thickness}
-              onChange={(e) => set({ thickness: e.target.value })}
-            />
-          </div>
+          {row.type === "Pipe Bracing" && (
+            <div>
+              <label className="field-label">2. Thickness (mm)</label>
+              <input
+                type="number"
+                className="field-input"
+                value={row.thickness}
+                onChange={(e) => set({ thickness: e.target.value })}
+              />
+            </div>
+          )}
           <div>
             <label className="field-label">Qty</label>
             <input
@@ -449,28 +651,10 @@ function BracingRowCard({ row, onChange, onRemove }) {
             />
           </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="field-label">Size / Dia (mm)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={row.size}
-              onChange={(e) => set({ size: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="field-label">Qty</label>
-            <input
-              type="number"
-              className="field-input"
-              value={row.qty}
-              onChange={(e) => set({ qty: e.target.value })}
-            />
-          </div>
+        <div className="flex items-center justify-center">
+          <BracingDiagram type={row.type} />
         </div>
-      )}
+      </div>
 
       <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
         Weight / Piece: {fmt(unitWeight)} KG &nbsp;|&nbsp; Total:{" "}
@@ -545,54 +729,64 @@ export default function QuotationWorkout() {
           <p className="text-sm font-bold text-steel-800">
             1. Base Plate / Foundation Bolts
           </p>
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="field-label">No. of Pedestals</label>
-              <input
-                type="number"
-                className="field-input"
-                value={doc_.project.foundationBolt.pedestals}
-                onChange={(e) =>
-                  updateProject({
-                    foundationBolt: {
-                      ...doc_.project.foundationBolt,
-                      pedestals: e.target.value,
-                    },
-                  })
-                }
-              />
+          <div className="flex gap-3">
+            {/* LEFT SIDE - INPUTS */}
+            <div className="flex-1 space-y-2">
+              <div>
+                <label className="field-label">No. of Pedestals</label>
+                <input
+                  type="number"
+                  className="field-input"
+                  value={doc_.project.foundationBolt.pedestals}
+                  onChange={(e) =>
+                    updateProject({
+                      foundationBolt: {
+                        ...doc_.project.foundationBolt,
+                        pedestals: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="field-label">Bolts / Pedestal</label>
+                <input
+                  type="number"
+                  className="field-input"
+                  value={doc_.project.foundationBolt.boltsPerPedestal}
+                  onChange={(e) =>
+                    updateProject({
+                      foundationBolt: {
+                        ...doc_.project.foundationBolt,
+                        boltsPerPedestal: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="field-label">Weight / Bolt (kg)</label>
+                <input
+                  type="number"
+                  className="field-input"
+                  value={doc_.project.foundationBolt.boltWeight}
+                  onChange={(e) =>
+                    updateProject({
+                      foundationBolt: {
+                        ...doc_.project.foundationBolt,
+                        boltWeight: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
             </div>
-            <div>
-              <label className="field-label">Bolts / Pedestal</label>
-              <input
-                type="number"
-                className="field-input"
-                value={doc_.project.foundationBolt.boltsPerPedestal}
-                onChange={(e) =>
-                  updateProject({
-                    foundationBolt: {
-                      ...doc_.project.foundationBolt,
-                      boltsPerPedestal: e.target.value,
-                    },
-                  })
-                }
-              />
-            </div>
-            <div>
-              <label className="field-label">Weight / Bolt (kg)</label>
-              <input
-                type="number"
-                className="field-input"
-                value={doc_.project.foundationBolt.boltWeight}
-                onChange={(e) =>
-                  updateProject({
-                    foundationBolt: {
-                      ...doc_.project.foundationBolt,
-                      boltWeight: e.target.value,
-                    },
-                  })
-                }
-              />
+
+            {/* RIGHT SIDE - DIAGRAM */}
+            <div className="flex w-32 shrink-0 items-center justify-center">
+              <FoundationBoltDiagram />
             </div>
           </div>
           <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
