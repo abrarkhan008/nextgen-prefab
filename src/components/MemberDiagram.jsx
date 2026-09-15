@@ -1,96 +1,227 @@
 export default function MemberDiagram() {
-  const numStyle = {
-    fill: "#1e293b",
-  };
-  const circle = (cx, cy) => <circle cx={cx} cy={cy} r="7" fill="#1e293b" />;
-  const num = (cx, cy, n) => (
-    <text
-      x={cx}
-      y={cy + 3}
-      textAnchor="middle"
-      fontSize="9"
-      fontWeight="bold"
-      fill="#fff"
-    >
-      {n}
-    </text>
+  const dark = "#334155";
+  const steel = "#cbd5e1";
+  const lightSteel = "#e2e8f0";
+  const orange = "#f97316";
+
+  const circle = (cx, cy, n) => (
+    <>
+      <circle cx={cx} cy={cy} r="8" fill="#1e293b" />
+      <text
+        x={cx}
+        y={cy + 3}
+        textAnchor="middle"
+        fontSize="9"
+        fontWeight="bold"
+        fill="#fff"
+      >
+        {n}
+      </text>
+    </>
   );
 
   return (
-    <svg viewBox="0 0 140 170" className="h-40 w-32">
-      {/* top flange */}
-      <rect
-        x="20"
-        y="20"
-        width="100"
-        height="10"
-        fill="#cbd5e1"
-        stroke="#334155"
-      />
-      {/* web */}
-      <rect
-        x="60"
-        y="30"
-        width="20"
-        height="90"
-        fill="#e2e8f0"
-        stroke="#334155"
-      />
-      {/* bottom flange */}
-      <rect
-        x="20"
-        y="120"
-        width="100"
-        height="10"
-        fill="#cbd5e1"
-        stroke="#334155"
-      />
-
-      {/* 1: flange width (top arrow) */}
-      <line
-        x1="20"
-        y1="12"
-        x2="120"
-        y2="12"
-        stroke="#334155"
-        markerStart="url(#arrow)"
-        markerEnd="url(#arrow)"
-      />
-      {circle(70, 12)}
-      {num(70, 12, 1)}
-
-      {/* 2: flange thickness */}
-      <line x1="10" y1="20" x2="10" y2="30" stroke="#334155" />
-      {circle(10, 25)}
-      {num(10, 25, 2)}
-
-      {/* 3: web width (vertical height of web) */}
-      <line x1="130" y1="30" x2="130" y2="120" stroke="#334155" />
-      {circle(130, 75)}
-      {num(130, 75, 3)}
-
-      {/* 4: web thickness */}
-      <line x1="60" y1="140" x2="80" y2="140" stroke="#334155" />
-      {circle(70, 140)}
-      {num(70, 140, 4)}
-
-      {/* 5: length (whole member) */}
-      <line x1="10" y1="150" x2="130" y2="150" stroke="#334155" />
-      {circle(70, 155)}
-      {num(70, 155, 5)}
-
+    <svg
+      viewBox="0 0 300 230"
+      className="w-full max-w-[360px] h-auto"
+    >
       <defs>
         <marker
-          id="arrow"
-          markerWidth="6"
-          markerHeight="6"
-          refX="3"
-          refY="3"
+          id="memberArrow"
+          markerWidth="7"
+          markerHeight="7"
+          refX="3.5"
+          refY="3.5"
           orient="auto"
         >
-          <path d="M0,0 L6,3 L0,6 Z" fill="#334155" />
+          <path d="M0,0 L7,3.5 L0,7 Z" fill={dark} />
         </marker>
       </defs>
+
+      {/* =========================
+          3D I-BEAM
+      ========================= */}
+
+      {/* TOP FLANGE - top face */}
+      <polygon
+        points="55,55 115,25 260,45 200,75"
+        fill={steel}
+        stroke={dark}
+        strokeWidth="1.5"
+      />
+
+      {/* TOP FLANGE - front/side thickness */}
+      <polygon
+        points="55,55 200,75 200,87 55,67"
+        fill="#b8c4d1"
+        stroke={dark}
+        strokeWidth="1.5"
+      />
+
+      {/* WEB - front face */}
+      <polygon
+        points="115,67 140,70 140,155 115,152"
+        fill={lightSteel}
+        stroke={dark}
+        strokeWidth="1.5"
+      />
+
+      {/* WEB - side depth */}
+      <polygon
+        points="140,70 200,87 200,155 140,155"
+        fill="#cbd5e1"
+        stroke={dark}
+        strokeWidth="1.5"
+      />
+
+      {/* BOTTOM FLANGE - top face */}
+      <polygon
+        points="55,152 115,125 260,145 200,175"
+        fill={steel}
+        stroke={dark}
+        strokeWidth="1.5"
+      />
+
+      {/* BOTTOM FLANGE - front/side thickness */}
+      <polygon
+        points="55,152 200,175 200,187 55,164"
+        fill="#b8c4d1"
+        stroke={dark}
+        strokeWidth="1.5"
+      />
+
+      {/* =========================
+          B - FLANGE WIDTH
+      ========================= */}
+
+      <line
+        x1="55"
+        y1="43"
+        x2="115"
+        y2="17"
+        stroke={dark}
+        strokeWidth="1.5"
+        markerStart="url(#memberArrow)"
+        markerEnd="url(#memberArrow)"
+      />
+
+      {circle(83, 30, 1)}
+
+      <text
+        x="82"
+        y="10"
+        textAnchor="middle"
+        fontSize="12"
+        fontWeight="bold"
+        fill={orange}
+      >
+        B
+      </text>
+
+      {/* =========================
+          H - OVERALL HEIGHT
+      ========================= */}
+
+      <line
+        x1="220"
+        y1="48"
+        x2="220"
+        y2="177"
+        stroke={dark}
+        strokeWidth="1.5"
+        markerStart="url(#memberArrow)"
+        markerEnd="url(#memberArrow)"
+      />
+
+      {circle(220, 112, 2)}
+
+      <text
+        x="235"
+        y="116"
+        fontSize="12"
+        fontWeight="bold"
+        fill={orange}
+      >
+        H
+      </text>
+
+      {/* =========================
+          L - MEMBER LENGTH
+      ========================= */}
+
+      <line
+        x1="55"
+        y1="205"
+        x2="260"
+        y2="177"
+        stroke={dark}
+        strokeWidth="1.5"
+        markerStart="url(#memberArrow)"
+        markerEnd="url(#memberArrow)"
+      />
+
+      {circle(158, 191, 3)}
+
+      <text
+        x="158"
+        y="218"
+        textAnchor="middle"
+        fontSize="12"
+        fontWeight="bold"
+        fill={orange}
+      >
+        L
+      </text>
+
+      {/* =========================
+          T - FLANGE THICKNESS
+      ========================= */}
+
+      <line
+        x1="42"
+        y1="54"
+        x2="42"
+        y2="68"
+        stroke={dark}
+        strokeWidth="1.5"
+        markerStart="url(#memberArrow)"
+        markerEnd="url(#memberArrow)"
+      />
+
+      {circle(32, 61, 4)}
+
+      <text
+        x="25"
+        y="82"
+        fontSize="12"
+        fontWeight="bold"
+        fill={orange}
+      >
+        T
+      </text>
+
+      {/* =========================
+          LABELS
+      ========================= */}
+
+      <text
+        x="125"
+        y="100"
+        fontSize="11"
+        fontWeight="bold"
+        fill={dark}
+      >
+        WEB
+      </text>
+
+      <text
+        x="90"
+        y="195"
+        fontSize="10"
+        fill={dark}
+      >
+        I-BEAM / MEMBER
+      </text>
     </svg>
   );
 }

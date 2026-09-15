@@ -70,6 +70,18 @@ export function memberRowWeight(row) {
   }, 0);
   return round2(m.totalWeight + platesTotal);
 }
+export const emptyPurlinRow = (label = "") => ({
+  id: newId(),
+  label,
+  type: "Z-Purlin",
+  flangeWidth: "",
+  webWidth: "",
+  lipWidth: "",
+  thickness: "",
+  length: "",
+  qty: "",
+  density: String(STEEL_DENSITY),
+});
 
 export function rateRowWeight(row) {
   return round2((Number(row.qty) || 0) * (Number(row.weightPerUnit) || 0));

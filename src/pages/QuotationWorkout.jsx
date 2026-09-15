@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import TopBar from "../components/TopBar";
-import { getDocument, saveDocument } from "../utils/storage";
+import { getDocument, saveDocument, newId } from "../utils/storage";
 
 import {
   SECTIONS,
@@ -10,8 +10,9 @@ import {
   emptyRateRow,
   emptyBracingRow,
   emptyPlate,
-  emptyBoltRow,
-  memberRowWeight,
+ emptyBoltRow,
+emptyPurlinRow,
+memberRowWeight,
   rateRowWeight,
   boltRowWeight,
   sectionTotalWeight,
@@ -22,6 +23,8 @@ import {
   bracingUnitWeight,
   bracingTotalWeight,
   purlinSectionWeight,
+  boltWeight,
+  round2,
 } from "../utils/calc";
 import BoltDiagram from "../components/BoltDiagram";
 import BracingDiagram from "../components/BracingDiagram";
@@ -37,8 +40,14 @@ import BuildingPlanForm from "../components/BuildingPlanForm";
 function foundationBoltTotalWeight(f) {
   const pedestals = Number(f?.pedestals) || 0;
   const boltsPerPedestal = Number(f?.boltsPerPedestal) || 0;
-  const boltWeight = Number(f?.boltWeight) || 0;
-  return pedestals * boltsPerPedestal * boltWeight;
+
+  const diameter = Number(f?.diameter) || 0;
+  const length = Number(f?.length) || 0;
+
+  const totalBolts = pedestals * boltsPerPedestal;
+  const singleBoltWeight = boltWeight(diameter, length);
+
+  return round2(totalBolts * singleBoltWeight);
 }
 function purlinTotalWeight(p) {
   return purlinSectionWeight(p).totalWeight;
@@ -648,6 +657,102 @@ function BracingRowCard({ row, onChange, onRemove }) {
     </div>
   );
 }
+function PurlinRowCard({ row, onChange, onRemove }) {
+  const { totalWeight } = purlinSectionWeight(row);
+  const set = (patch) => onChange({ ...row, ...patch });
+
+  return (
+    <div className="space-y-1.5 rounded-lg border border-steel-200 p-2">
+      <div className="flex items-center gap-2">
+        <input
+          className="field-input flex-1"
+          placeholder="Label, e.g. P1"
+          value={row.label}
+          onChange={(e) => set({ label: e.target.value })}
+        />
+        <button className="text-xs font-bold text-red-500" onClick={onRemove}>
+          Remove
+        </button>
+      </div>
+
+      <div>
+        <label className="field-label">Purlin Type</label>
+        <select
+          className="field-input"
+          value={row.type || "Z-Purlin"}
+          onChange={(e) => set({ type: e.target.value })}
+        >
+          <option value="Z-Purlin">Z-Purlin</option>
+          <option value="C-Purlin">C-Purlin</option>
+        </select>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="field-label">Flange Width (mm)</label>
+          <input
+            type="number"
+            className="field-input"
+            value={row.flangeWidth}
+            onChange={(e) => set({ flangeWidth: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="field-label">Web Width (mm)</label>
+          <input
+            type="number"
+            className="field-input"
+            value={row.webWidth}
+            onChange={(e) => set({ webWidth: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="field-label">Lip Width (mm)</label>
+          <input
+            type="number"
+            className="field-input"
+            value={row.lipWidth}
+            onChange={(e) => set({ lipWidth: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="field-label">Thickness (mm)</label>
+          <input
+            type="number"
+            className="field-input"
+            value={row.thickness}
+            onChange={(e) => set({ thickness: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="field-label">Length (m)</label>
+          <input
+            type="number"
+            className="field-input"
+            value={row.length}
+            onChange={(e) => set({ length: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="field-label">Qty</label>
+          <input
+            type="number"
+            className="field-input"
+            value={row.qty}
+            onChange={(e) => set({ qty: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
+        Computed Weight: {fmt(totalWeight)} KG
+      </div>
+    </div>
+  );
+}
 
 export default function QuotationWorkout() {
   const { id } = useParams();
@@ -698,7 +803,21 @@ export default function QuotationWorkout() {
   const foundationWeight = foundationBoltTotalWeight(
     doc_.project.foundationBolt,
   );
-  const purlinWeight = purlinTotalWeight(doc_.project.purlin);
+  const purlins = doc_.project.purlins || [];
+  const purlinWeight = purlins.reduce(
+    (sum, p) => sum + purlinSectionWeight(p).totalWeight,
+    0,
+  );
+  const addPurlinRow = () =>
+    updateProject({
+      purlins: [...purlins, emptyPurlinRow(`P${purlins.length + 1}`)],
+    });
+  const updatePurlinRow = (rowId, updated) =>
+    updateProject({
+      purlins: purlins.map((r) => (r.id === rowId ? updated : r)),
+    });
+  const removePurlinRow = (rowId) =>
+    updateProject({ purlins: purlins.filter((r) => r.id !== rowId) });
   const sectionsTotal = SECTIONS.reduce(
     (sum, s) => sum + sectionTotalWeight(s, doc_.workout[s.key] || []),
     0,
@@ -823,15 +942,17 @@ export default function QuotationWorkout() {
       });
     });
 
-    if (purlinWeight) {
+    purlins.forEach((p) => {
+      const w = purlinSectionWeight(p).totalWeight;
+      if (!w) return;
       const row = emptyItem();
-      row.description = "PURLIN";
-      row.qty = purlinWeight;
+      row.description = `${p.label || "PURLIN"} (${p.type || "Z-Purlin"})`;
+      row.qty = w;
       row.unit = "KGS";
       row.rate = rate;
-      row.amount = purlinWeight * rate;
+      row.amount = w * rate;
       newItems.push(row);
-    }
+    });
 
     const next = { ...doc_, items: newItems };
     setDoc(next);
@@ -844,6 +965,12 @@ export default function QuotationWorkout() {
       <TopBar title="PEB Workout" subtitle={`Quotation No. ${doc_.docNo}`} />
 
       <div className="space-y-4 p-4">
+        <button
+          className="btn-accent w-full"
+          onClick={() => setShowPlanForm(true)}
+        >
+          📋 Generate from Building Plan
+        </button>
         {/* 1. Base Plate / Foundation Bolts */}
         <div className="card space-y-3">
           <p className="text-sm font-bold text-steel-800">
@@ -870,7 +997,7 @@ export default function QuotationWorkout() {
               </div>
 
               <div>
-                <label className="field-label">Bolts / Pedestal</label>
+                <label className="field-label">No of Bolts</label>
                 <input
                   type="number"
                   className="field-input"
@@ -887,16 +1014,37 @@ export default function QuotationWorkout() {
               </div>
 
               <div>
-                <label className="field-label">Weight / Bolt (kg)</label>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Bolt Diameter (mm)
+                </label>
                 <input
                   type="number"
-                  className="field-input"
-                  value={doc_.project.foundationBolt.boltWeight}
+                  placeholder="Example: 20"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                  value={doc_.project.foundationBolt.diameter || ""}
                   onChange={(e) =>
                     updateProject({
                       foundationBolt: {
                         ...doc_.project.foundationBolt,
-                        boltWeight: e.target.value,
+                        diameter: e.target.value,
+                      },
+                    })
+                  }
+                />
+
+                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  Bolt Length (mm)
+                </label>
+                <input
+                  type="number"
+                  placeholder="Example: 600"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                  value={doc_.project.foundationBolt.length || ""}
+                  onChange={(e) =>
+                    updateProject({
+                      foundationBolt: {
+                        ...doc_.project.foundationBolt,
+                        length: e.target.value,
                       },
                     })
                   }
@@ -982,110 +1130,33 @@ export default function QuotationWorkout() {
         {/* 14. Purlin (roof / cladding) */}
         {/* 14. Purlin (roof / cladding) */}
         <div className="card space-y-3">
-          <p className="text-sm font-bold text-steel-800">14. Purlin</p>
-          <div>
-            <label className="field-label">Purlin Type</label>
-            <select
-              className="field-input"
-              value={doc_.project.purlin.type || "Z-Purlin"}
-              onChange={(e) =>
-                updateProject({
-                  purlin: { ...doc_.project.purlin, type: e.target.value },
-                })
-              }
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-steel-800">14. Purlin</p>
+            <button
+              className="btn-secondary px-3 py-1 text-xs"
+              onClick={addPurlinRow}
             >
-              <option value="Z-Purlin">Z-Purlin</option>
-              <option value="C-Purlin">C-Purlin</option>
-            </select>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <label className="field-label">Flange Width (mm)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={doc_.project.purlin.flangeWidth}
-              onChange={(e) =>
-                updateProject({
-                  purlin: {
-                    ...doc_.project.purlin,
-                    flangeWidth: e.target.value,
-                  },
-                })
-              }
-            />
-          </div>
-          <div>
-            <label className="field-label">Web Width (mm)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={doc_.project.purlin.webWidth}
-              onChange={(e) =>
-                updateProject({
-                  purlin: { ...doc_.project.purlin, webWidth: e.target.value },
-                })
-              }
-            />
-          </div>
-          <div>
-            <label className="field-label">Lip Width (mm)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={doc_.project.purlin.lipWidth}
-              onChange={(e) =>
-                updateProject({
-                  purlin: { ...doc_.project.purlin, lipWidth: e.target.value },
-                })
-              }
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <label className="field-label">Thickness (mm)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={doc_.project.purlin.thickness}
-              onChange={(e) =>
-                updateProject({
-                  purlin: { ...doc_.project.purlin, thickness: e.target.value },
-                })
-              }
-            />
-          </div>
-          <div>
-            <label className="field-label">Length (m)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={doc_.project.purlin.length}
-              onChange={(e) =>
-                updateProject({
-                  purlin: { ...doc_.project.purlin, length: e.target.value },
-                })
-              }
-            />
-          </div>
-          <div>
-            <label className="field-label">Qty</label>
-            <input
-              type="number"
-              className="field-input"
-              value={doc_.project.purlin.qty}
-              onChange={(e) =>
-                updateProject({
-                  purlin: { ...doc_.project.purlin, qty: e.target.value },
-                })
-              }
-            />
+              + Add
+            </button>
           </div>
 
-          <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
-            Computed Weight: {fmt(purlinWeight)} KG
+          {purlins.length === 0 && (
+            <p className="text-xs text-steel-400">
+              No purlin rows yet. Tap + Add.
+            </p>
+          )}
+
+          {purlins.map((p) => (
+            <PurlinRowCard
+              key={p.id}
+              row={p}
+              onChange={(updated) => updatePurlinRow(p.id, updated)}
+              onRemove={() => removePurlinRow(p.id)}
+            />
+          ))}
+
+          <div className="rounded-lg bg-steel-100 px-3 py-2 text-xs font-bold text-steel-700">
+            Purlin Total: {fmt(purlinWeight)} KG
           </div>
         </div>
 
@@ -1112,12 +1183,7 @@ export default function QuotationWorkout() {
             Material List
           </button>
         </div>
-        <button
-          className="btn-accent w-full"
-          onClick={() => setShowPlanForm(true)}
-        >
-          📋 Generate from Building Plan
-        </button>
+
         <button className="btn-secondary w-full" onClick={pushWorkoutToItems}>
           ⬆️ Push Weights to Quotation Items
         </button>

@@ -209,7 +209,9 @@ function blankDoc() {
       foundationBolt: {
         pedestals: "",
         boltsPerPedestal: "",
-        boltWeight: "",
+        diameter: "",
+        length: "",
+        // boltWeight: "",
       },
       rateItems: [],
       bracingItems: [],

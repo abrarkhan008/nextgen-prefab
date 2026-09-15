@@ -25,7 +25,7 @@ export function round2(n) {
 export function boltWeight(d, l) {
   const dia = Number(d) || 0;
   const len = Number(l) || 0;
-  return 0.006165 * dia * dia * len;
+  return 0.000006165 * dia * dia * len;
 }
 
 /** Builds flange + web rows (and totals) for one pillar/rafter/adapter member */
