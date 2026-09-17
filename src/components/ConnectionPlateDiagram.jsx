@@ -1,199 +1,190 @@
-export default function ConnectionPlateDiagram() {
-  const dark = "#334155";
-  const plate = "#cbd5e1";
-  const hole = "#94a3b8";
+export default function FlatBarDiagram() {
+  const dark = "#5b6168";
+  const topSteel = "#d9dadd";
+  const frontSteel = "#b8bcc0";
+  const sideSteel = "#aeb3b8";
   const orange = "#f97316";
 
   const circle = (cx, cy, n) => (
-    <>
-      <circle cx={cx} cy={cy} r="8" fill="#1e293b" />
+    <g>
+      <circle cx={cx} cy={cy} r="10" fill="#1e293b" />
       <text
         x={cx}
-        y={cy + 3}
+        y={cy + 4}
         textAnchor="middle"
-        fontSize="9"
+        fontSize="10"
         fontWeight="bold"
-        fill="#fff"
+        fill="white"
       >
         {n}
       </text>
-    </>
+    </g>
   );
 
   return (
-    <svg viewBox="0 0 260 230" className="w-full max-w-[320px] h-auto">
+    <svg
+      viewBox="0 0 600 320"
+      className="w-full h-auto"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <defs>
+        <filter id="barShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="2" dy="3" stdDeviation="3" floodOpacity="0.12" />
+        </filter>
+
         <marker
-          id="plateArrow"
-          markerWidth="7"
-          markerHeight="7"
-          refX="3.5"
-          refY="3.5"
+          id="barArrow"
+          markerWidth="8"
+          markerHeight="8"
+          refX="4"
+          refY="4"
           orient="auto"
         >
-          <path d="M0,0 L7,3.5 L0,7 Z" fill={dark} />
+          <path d="M0 0 L8 4 L0 8 Z" fill={dark} />
         </marker>
       </defs>
 
-      {/* =========================
-          CONNECTION PLATE
-      ========================= */}
+      {/* =====================================================
+          FLAT BAR
+      ===================================================== */}
 
-      <rect
-        x="55"
-        y="50"
-        width="120"
-        height="115"
-        rx="1"
-        fill={plate}
-        stroke={dark}
-        strokeWidth="2"
-      />
+      <g filter="url(#barShadow)">
+        {/* TOP FACE */}
+        <polygon
+          points="
+            110,150
+            285,60
+            480,150
+            305,240
+          "
+          fill={topSteel}
+          stroke={dark}
+          strokeWidth="3"
+          strokeLinejoin="round"
+        />
 
-      {/* =========================
-          BOLT HOLES
-      ========================= */}
+        {/* FRONT FACE */}
+        <polygon
+          points="
+            110,150
+            305,240
+            305,268
+            110,178
+          "
+          fill={frontSteel}
+          stroke={dark}
+          strokeWidth="3"
+          strokeLinejoin="round"
+        />
 
-      <circle
-        cx="82"
-        cy="75"
-        r="7"
-        fill={hole}
-        stroke={dark}
-        strokeWidth="1.5"
-      />
+        {/* RIGHT FACE */}
+        <polygon
+          points="
+            305,240
+            480,150
+            480,178
+            305,268
+          "
+          fill={sideSteel}
+          stroke={dark}
+          strokeWidth="3"
+          strokeLinejoin="round"
+        />
+      </g>
 
-      <circle
-        cx="148"
-        cy="75"
-        r="7"
-        fill={hole}
-        stroke={dark}
-        strokeWidth="1.5"
-      />
-
-      <circle
-        cx="82"
-        cy="140"
-        r="7"
-        fill={hole}
-        stroke={dark}
-        strokeWidth="1.5"
-      />
-
-      <circle
-        cx="148"
-        cy="140"
-        r="7"
-        fill={hole}
-        stroke={dark}
-        strokeWidth="1.5"
-      />
-
-      {/* =========================
-          B - PLATE WIDTH
-      ========================= */}
+      {/* =====================================================
+          DIMENSION 1 - B
+          BAR WIDTH
+      ===================================================== */}
 
       <line
-        x1="55"
-        y1="32"
-        x2="175"
-        y2="32"
+        x1="110"
+        y1="120"
+        x2="285"
+        y2="30"
         stroke={dark}
-        strokeWidth="1.5"
-        markerStart="url(#plateArrow)"
-        markerEnd="url(#plateArrow)"
+        strokeWidth="2"
+        markerStart="url(#barArrow)"
+        markerEnd="url(#barArrow)"
       />
 
-      {circle(115, 32, 1)}
+      {circle(197, 77, 1)}
 
       <text
-        x="115"
-        y="20"
+        x="197"
+        y="55"
         textAnchor="middle"
-        fontSize="12"
+        fontSize="16"
         fontWeight="bold"
         fill={orange}
       >
         B
       </text>
 
-      {/* =========================
-          L - PLATE LENGTH
-      ========================= */}
+      {/* =====================================================
+          DIMENSION 2 - T
+          BAR THICKNESS
+      ===================================================== */}
 
       <line
-        x1="195"
-        y1="50"
-        x2="195"
-        y2="165"
+        x1="75"
+        y1="150"
+        x2="75"
+        y2="178"
         stroke={dark}
-        strokeWidth="1.5"
-        markerStart="url(#plateArrow)"
-        markerEnd="url(#plateArrow)"
+        strokeWidth="2"
+        markerStart="url(#barArrow)"
+        markerEnd="url(#barArrow)"
       />
 
-      {circle(195, 108, 2)}
-
-      <text x="210" y="112" fontSize="12" fontWeight="bold" fill={orange}>
-        L
-      </text>
-
-      {/* =========================
-          T - THICKNESS
-      ========================= */}
-
-      {/* side profile */}
-      <rect
-        x="75"
-        y="190"
-        width="70"
-        height="8"
-        fill="#94a3b8"
-        stroke={dark}
-        strokeWidth="1.5"
-      />
-
-      <line x1="75" y1="180" x2="75" y2="205" stroke={dark} />
-
-      <line x1="145" y1="180" x2="145" y2="205" stroke={dark} />
-
-      {circle(110, 214, 3)}
+      {circle(58, 164, 2)}
 
       <text
-        x="110"
-        y="229"
+        x="58"
+        y="196"
         textAnchor="middle"
-        fontSize="12"
+        fontSize="16"
         fontWeight="bold"
         fill={orange}
       >
         T
       </text>
 
-      {/* =========================
-          QTY
-      ========================= */}
+      {/* =====================================================
+          DIMENSION 3 - L
+          BAR LENGTH
+      ===================================================== */}
 
-      {circle(40, 45, 4)}
+      <line
+        x1="305"
+        y1="290"
+        x2="480"
+        y2="200"
+        stroke={dark}
+        strokeWidth="2"
+        markerStart="url(#barArrow)"
+        markerEnd="url(#barArrow)"
+      />
 
-      <text x="20" y="30" fontSize="11" fontWeight="bold" fill={dark}>
-        QTY
-      </text>
-
-      {/* =========================
-          TITLE
-      ========================= */}
+      {circle(392, 245, 3)}
 
       <text
-        x="115"
-        y="175"
+        x="392"
+        y="272"
         textAnchor="middle"
-        fontSize="10"
+        fontSize="16"
         fontWeight="bold"
-        fill={dark}
+        fill={orange}
       >
-        CONNECTION PLATE
+        L
+      </text>
+
+      {/* =====================================================
+          MEMBER NAME
+      ===================================================== */}
+
+      <text x="300" y="300" textAnchor="middle" fontSize="13" fill={dark}>
+        FLAT BAR
       </text>
     </svg>
   );

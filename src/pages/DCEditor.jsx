@@ -13,6 +13,7 @@ import {
 import { getCompany } from "../utils/company";
 import { generateDcPdf } from "../utils/pdf/dcPdf";
 import { downloadPdf, sharePdf } from "../utils/pdfActions";
+import PdfPreviewModal from "../components/PdfPreviewModal";
 
 function blankDoc() {
   return {
@@ -96,6 +97,12 @@ export default function DCEditor() {
       console.error("DC save error:", error);
       alert("Could not save DC");
     }
+  };
+  const [previewPdf, setPreviewPdf] = useState(null);
+
+  const handlePreview = () => {
+    saveDocument(doc_);
+    setPreviewPdf(buildPdf());
   };
   const handleDownload = async () => {
     try {
@@ -303,6 +310,18 @@ export default function DCEditor() {
         onSave={handleSave}
         onDownload={handleDownload}
         onShare={handleShare}
+      />
+      <ActionBar
+        onSave={handleSave}
+        onPreview={handlePreview}
+        onDownload={handleDownload}
+        onShare={handleShare}
+      />
+
+      <PdfPreviewModal
+        pdf={previewPdf}
+        filename={filename()}
+        onClose={() => setPreviewPdf(null)}
       />
     </div>
   );

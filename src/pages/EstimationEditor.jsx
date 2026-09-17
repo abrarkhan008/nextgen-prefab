@@ -11,6 +11,7 @@ import {
 import { getCompany } from "../utils/company";
 import { generateEstimationPdf } from "../utils/pdf/estimationPdf";
 import { downloadPdf, sharePdf } from "../utils/pdfActions";
+import PdfPreviewModal from "../components/PdfPreviewModal";
 
 const emptyEstItem = () => ({
   id: newId(),
@@ -102,6 +103,12 @@ export default function EstimationEditor() {
   const handleDownload = () => {
     saveDocument(doc_);
     downloadPdf(buildPdf(), filename());
+  };
+  const [previewPdf, setPreviewPdf] = useState(null);
+
+  const handlePreview = () => {
+    saveDocument(doc_);
+    setPreviewPdf(buildPdf());
   };
   const handleShare = async () => {
     saveDocument(doc_);
@@ -287,6 +294,18 @@ export default function EstimationEditor() {
         onSave={handleSave}
         onDownload={handleDownload}
         onShare={handleShare}
+      />
+      <ActionBar
+        onSave={handleSave}
+        onPreview={handlePreview}
+        onDownload={handleDownload}
+        onShare={handleShare}
+      />
+
+      <PdfPreviewModal
+        pdf={previewPdf}
+        filename={filename()}
+        onClose={() => setPreviewPdf(null)}
       />
     </div>
   );

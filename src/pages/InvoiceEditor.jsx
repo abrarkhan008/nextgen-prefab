@@ -14,6 +14,7 @@ import { getCompany } from "../utils/company";
 import { generateInvoicePdf } from "../utils/pdf/invoicePdf";
 import { downloadPdf, sharePdf } from "../utils/pdfActions";
 import { gstSummary } from "../utils/calc";
+import PdfPreviewModal from "../components/PdfPreviewModal";
 
 function blankDoc() {
   return {
@@ -103,6 +104,12 @@ export default function InvoiceEditor() {
     } catch (error) {
       console.error("Invoice PDF error:", error);
     }
+  };
+  const [previewPdf, setPreviewPdf] = useState(null);
+
+  const handlePreview = () => {
+    saveDocument(doc_);
+    setPreviewPdf(buildPdf());
   };
   const handleShare = async () => {
     try {
@@ -337,6 +344,18 @@ function Row({ label, value, bold }) {
           minimumFractionDigits: 2,
         })}
       </span>
+      <ActionBar
+        onSave={handleSave}
+        onPreview={handlePreview}
+        onDownload={handleDownload}
+        onShare={handleShare}
+      />
+
+      <PdfPreviewModal
+        pdf={previewPdf}
+        filename={filename()}
+        onClose={() => setPreviewPdf(null)}
+      />
     </div>
   );
 }

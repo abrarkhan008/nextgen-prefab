@@ -24,6 +24,7 @@ import {
   bracingTotalWeight,
   purlinSectionWeight,
 } from "../utils/calc";
+import PdfPreviewModal from "../components/PdfPreviewModal";
 
 const emptyMember = () => ({
   flangeWidth: "",
@@ -474,6 +475,12 @@ export default function QuotationEditor() {
     } else {
       alert("Quotation saved successfully");
     }
+  };
+  const [previewPdf, setPreviewPdf] = useState(null);
+
+  const handlePreview = () => {
+    saveDocument(doc_);
+    setPreviewPdf(buildPdf());
   };
   const handleDownload = async () => {
     saveDocument(doc_);
@@ -1616,6 +1623,18 @@ export default function QuotationEditor() {
         onSave={handleSave}
         onDownload={handleDownload}
         onShare={handleShare}
+      />
+      <ActionBar
+        onSave={handleSave}
+        onPreview={handlePreview}
+        onDownload={handleDownload}
+        onShare={handleShare}
+      />
+
+      <PdfPreviewModal
+        pdf={previewPdf}
+        filename={filename()}
+        onClose={() => setPreviewPdf(null)}
       />
     </div>
   );

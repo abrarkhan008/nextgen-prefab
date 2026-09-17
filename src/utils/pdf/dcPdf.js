@@ -195,7 +195,11 @@ export function generateDcPdf(doc_, company) {
       cellPadding: 2,
       textColor: [20, 30, 40],
     },
-    headStyles: { fillColor: [50, 62, 77], textColor: 255, fontStyle: "bold" },
+    headStyles: {
+      fillColor: [226, 232, 240],
+      textColor: 51,
+      fontStyle: "bold",
+    },
     columnStyles: {
       0: { cellWidth: 12, halign: "center" },
       1: { cellWidth: "auto" },

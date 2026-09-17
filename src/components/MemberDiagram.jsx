@@ -1,227 +1,282 @@
 export default function MemberDiagram() {
-  const dark = "#334155";
-  const steel = "#cbd5e1";
-  const lightSteel = "#e2e8f0";
-  const orange = "#f97316";
+  // ---- isometric axes (true parallelogram projection) ----
+  const O = { x: 190, y: 300 }; // near corner, top face
+  const A = { x: 280, y: -160 }; // beam LENGTH direction
+  const B = { x: -130, y: -75 }; // flange WIDTH direction
+
+  const flangeThickness = 34;
+  const webHeight = 130; // gap between the two flanges (web width)
+  const webBStart = 0.36; // web sits centered in the flange width
+  const webBEnd = 0.64;
+  const webAVisible = 0.14; // sliver of the web's long face that peeks out
+
+  const D2 = flangeThickness + webHeight; // top of bottom flange (down offset)
+
+  // project a point given fractional length (a), fractional width (b),
+  // and a straight-down pixel offset (down) for thickness/height
+  const pt = (a, b, down = 0) => ({
+    x: O.x + a * A.x + b * B.x,
+    y: O.y + a * A.y + b * B.y + down,
+  });
+
+  const poly = (pts) => pts.map((p) => `${p.x},${p.y}`).join(" ");
+
+  // ---- colors, matched to a soft grayscale rendered look ----
+  const topFace = "#dcdedf";
+  const frontFace = "#aeb2b6";
+  const rightFace = "#8d9195";
+  const webFrontFace = "#7d8185";
+  const webRightFace = "#6b6f73";
+  const seam = "#000000";
+  const dimLine = "#000000";
 
   const circle = (cx, cy, n) => (
-    <>
-      <circle cx={cx} cy={cy} r="8" fill="#1e293b" />
+    <g>
+      <circle cx={cx} cy={cy} r="11" fill="#000000" />
       <text
         x={cx}
-        y={cy + 3}
+        y={cy + 4}
         textAnchor="middle"
-        fontSize="9"
+        fontSize="11"
         fontWeight="bold"
-        fill="#fff"
+        fill="#ffffff"
       >
         {n}
       </text>
-    </>
+    </g>
   );
+
+  // ---- TOP FLANGE ----
+  const tfTop = poly([pt(0, 0, 0), pt(1, 0, 0), pt(1, 1, 0), pt(0, 1, 0)]);
+  const tfFront = poly([
+    pt(0, 0, 0),
+    pt(0, 1, 0),
+    pt(0, 1, flangeThickness),
+    pt(0, 0, flangeThickness),
+  ]);
+  const tfRight = poly([
+    pt(0, 1, 0),
+    pt(1, 1, 0),
+    pt(1, 1, flangeThickness),
+    pt(0, 1, flangeThickness),
+  ]);
+
+  // ---- BOTTOM FLANGE ----
+  const bfTop = poly([pt(0, 0, D2), pt(1, 0, D2), pt(1, 1, D2), pt(0, 1, D2)]);
+  const bfFront = poly([
+    pt(0, 0, D2),
+    pt(0, 1, D2),
+    pt(0, 1, D2 + flangeThickness),
+    pt(0, 0, D2 + flangeThickness),
+  ]);
+  const bfRight = poly([
+    pt(0, 1, D2),
+    pt(1, 1, D2),
+    pt(1, 1, D2 + flangeThickness),
+    pt(0, 1, D2 + flangeThickness),
+  ]);
+
+  // ---- WEB (only the near end + a small sliver are visible) ----
+  const webFrontPoly = poly([
+    pt(0, webBStart, flangeThickness),
+    pt(0, webBEnd, flangeThickness),
+    pt(0, webBEnd, D2),
+    pt(0, webBStart, D2),
+  ]);
+  const webRightPoly = poly([
+    pt(0, webBEnd, flangeThickness),
+    pt(webAVisible, webBEnd, flangeThickness),
+    pt(webAVisible, webBEnd, D2),
+    pt(0, webBEnd, D2),
+  ]);
+
+  // ---- dimension callout endpoints ----
+  const p000 = pt(0, 0, 0);
+  const p010 = pt(0, 1, 0);
+  const d1a = { x: p000.x - 10, y: p000.y - 70 };
+  const d1b = { x: p010.x - 10, y: p010.y - 70 };
+
+  const d2a = { x: pt(0, 0, 0).x - 55, y: pt(0, 0, 0).y };
+  const d2b = {
+    x: pt(0, 0, flangeThickness).x - 55,
+    y: pt(0, 0, flangeThickness).y,
+  };
+
+  const d3a = {
+    x: pt(1, 0, flangeThickness).x + 30,
+    y: pt(1, 0, flangeThickness).y,
+  };
+  const d3b = { x: pt(1, 0, D2).x + 30, y: pt(1, 0, D2).y };
+
+  const wA = pt(0, webBStart, flangeThickness);
+  const wB = pt(0, webBEnd, flangeThickness);
+  const d4a = { x: wA.x - 45, y: wA.y + 90 };
+  const d4b = { x: wB.x - 45, y: wB.y + 90 };
+
+  const d5a = {
+    x: pt(0, 0, D2 + flangeThickness).x,
+    y: pt(0, 0, D2 + flangeThickness).y + 25,
+  };
+  const d5b = {
+    x: pt(1, 0, D2 + flangeThickness).x,
+    y: pt(1, 0, D2 + flangeThickness).y + 25,
+  };
+
+  const mid = (p, q) => ({ x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 });
 
   return (
     <svg
-      viewBox="0 0 300 230"
-      className="w-full max-w-[360px] h-auto"
+      viewBox="0 0 640 640"
+      className="w-full h-auto"
+      xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
+        <filter id="beamShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="3" dy="6" stdDeviation="8" floodOpacity="0.15" />
+        </filter>
         <marker
-          id="memberArrow"
-          markerWidth="7"
-          markerHeight="7"
-          refX="3.5"
-          refY="3.5"
+          id="dimArrow"
+          markerWidth="8"
+          markerHeight="8"
+          refX="4"
+          refY="4"
           orient="auto"
         >
-          <path d="M0,0 L7,3.5 L0,7 Z" fill={dark} />
+          <path d="M0 0 L8 4 L0 8 Z" fill={dimLine} />
         </marker>
       </defs>
 
-      {/* =========================
-          3D I-BEAM
-      ========================= */}
+      <g filter="url(#beamShadow)" strokeLinejoin="round">
+        {/* BOTTOM FLANGE (drawn first, sits behind) */}
+        <polygon
+          points={bfFront}
+          fill={frontFace}
+          stroke={seam}
+          strokeWidth="2"
+        />
+        <polygon
+          points={bfRight}
+          fill={rightFace}
+          stroke={seam}
+          strokeWidth="2"
+        />
+        <polygon points={bfTop} fill={topFace} stroke={seam} strokeWidth="2" />
 
-      {/* TOP FLANGE - top face */}
-      <polygon
-        points="55,55 115,25 260,45 200,75"
-        fill={steel}
-        stroke={dark}
-        strokeWidth="1.5"
-      />
+        {/* WEB */}
+        <polygon
+          points={webFrontPoly}
+          fill={webFrontFace}
+          stroke={seam}
+          strokeWidth="1.5"
+        />
+        <polygon
+          points={webRightPoly}
+          fill={webRightFace}
+          stroke={seam}
+          strokeWidth="1.5"
+        />
 
-      {/* TOP FLANGE - front/side thickness */}
-      <polygon
-        points="55,55 200,75 200,87 55,67"
-        fill="#b8c4d1"
-        stroke={dark}
-        strokeWidth="1.5"
-      />
+        {/* TOP FLANGE (drawn last, sits in front) */}
+        <polygon
+          points={tfFront}
+          fill={frontFace}
+          stroke={seam}
+          strokeWidth="2"
+        />
+        <polygon
+          points={tfRight}
+          fill={rightFace}
+          stroke={seam}
+          strokeWidth="2"
+        />
+        <polygon points={tfTop} fill={topFace} stroke={seam} strokeWidth="2" />
+      </g>
 
-      {/* WEB - front face */}
-      <polygon
-        points="115,67 140,70 140,155 115,152"
-        fill={lightSteel}
-        stroke={dark}
-        strokeWidth="1.5"
-      />
+      {/* ===================== DIMENSION CALLOUTS ===================== */}
 
-      {/* WEB - side depth */}
-      <polygon
-        points="140,70 200,87 200,155 140,155"
-        fill="#cbd5e1"
-        stroke={dark}
-        strokeWidth="1.5"
-      />
-
-      {/* BOTTOM FLANGE - top face */}
-      <polygon
-        points="55,152 115,125 260,145 200,175"
-        fill={steel}
-        stroke={dark}
-        strokeWidth="1.5"
-      />
-
-      {/* BOTTOM FLANGE - front/side thickness */}
-      <polygon
-        points="55,152 200,175 200,187 55,164"
-        fill="#b8c4d1"
-        stroke={dark}
-        strokeWidth="1.5"
-      />
-
-      {/* =========================
-          B - FLANGE WIDTH
-      ========================= */}
-
+      {/* 1 - FLANGE WIDTH */}
       <line
-        x1="55"
-        y1="43"
-        x2="115"
-        y2="17"
-        stroke={dark}
-        strokeWidth="1.5"
-        markerStart="url(#memberArrow)"
-        markerEnd="url(#memberArrow)"
+        x1={d1a.x}
+        y1={d1a.y}
+        x2={d1b.x}
+        y2={d1b.y}
+        stroke={dimLine}
+        strokeWidth="2"
+        markerStart="url(#dimArrow)"
+        markerEnd="url(#dimArrow)"
       />
+      {circle(mid(d1a, d1b).x, mid(d1a, d1b).y, 1)}
 
-      {circle(83, 30, 1)}
-
-      <text
-        x="82"
-        y="10"
-        textAnchor="middle"
-        fontSize="12"
-        fontWeight="bold"
-        fill={orange}
-      >
-        B
-      </text>
-
-      {/* =========================
-          H - OVERALL HEIGHT
-      ========================= */}
-
+      {/* 2 - FLANGE THICKNESS */}
       <line
-        x1="220"
-        y1="48"
-        x2="220"
-        y2="177"
-        stroke={dark}
-        strokeWidth="1.5"
-        markerStart="url(#memberArrow)"
-        markerEnd="url(#memberArrow)"
+        x1={d2a.x}
+        y1={d2a.y}
+        x2={d2b.x}
+        y2={d2b.y}
+        stroke={dimLine}
+        strokeWidth="2"
+        markerStart="url(#dimArrow)"
+        markerEnd="url(#dimArrow)"
       />
+      {circle(mid(d2a, d2b).x - 18, mid(d2a, d2b).y, 2)}
 
-      {circle(220, 112, 2)}
-
-      <text
-        x="235"
-        y="116"
-        fontSize="12"
-        fontWeight="bold"
-        fill={orange}
-      >
-        H
-      </text>
-
-      {/* =========================
-          L - MEMBER LENGTH
-      ========================= */}
-
+      {/* 3 - WEB WIDTH (clear depth between flanges) */}
       <line
-        x1="55"
-        y1="205"
-        x2="260"
-        y2="177"
-        stroke={dark}
-        strokeWidth="1.5"
-        markerStart="url(#memberArrow)"
-        markerEnd="url(#memberArrow)"
+        x1={d3a.x}
+        y1={d3a.y}
+        x2={d3b.x}
+        y2={d3b.y}
+        stroke={dimLine}
+        strokeWidth="2"
+        markerStart="url(#dimArrow)"
+        markerEnd="url(#dimArrow)"
       />
+      {circle(mid(d3a, d3b).x + 22, mid(d3a, d3b).y, 3)}
 
-      {circle(158, 191, 3)}
-
-      <text
-        x="158"
-        y="218"
-        textAnchor="middle"
-        fontSize="12"
-        fontWeight="bold"
-        fill={orange}
-      >
-        L
-      </text>
-
-      {/* =========================
-          T - FLANGE THICKNESS
-      ========================= */}
-
+      {/* 4 - WEB THICKNESS */}
       <line
-        x1="42"
-        y1="54"
-        x2="42"
-        y2="68"
-        stroke={dark}
-        strokeWidth="1.5"
-        markerStart="url(#memberArrow)"
-        markerEnd="url(#memberArrow)"
+        x1={d4a.x}
+        y1={d4a.y}
+        x2={d4b.x}
+        y2={d4b.y}
+        stroke={dimLine}
+        strokeWidth="2"
+        markerStart="url(#dimArrow)"
+        markerEnd="url(#dimArrow)"
       />
+      {circle(mid(d4a, d4b).x, mid(d4a, d4b).y + 20, 4)}
 
-      {circle(32, 61, 4)}
+      {/* 5 - LENGTH */}
+      <line
+        x1={d5a.x}
+        y1={d5a.y}
+        x2={d5b.x}
+        y2={d5b.y}
+        stroke={dimLine}
+        strokeWidth="2"
+        markerStart="url(#dimArrow)"
+        markerEnd="url(#dimArrow)"
+      />
+      {circle(mid(d5a, d5b).x, mid(d5a, d5b).y + 22, 5)}
 
-      <text
-        x="25"
-        y="82"
-        fontSize="12"
-        fontWeight="bold"
-        fill={orange}
-      >
-        T
-      </text>
-
-      {/* =========================
-          LABELS
-      ========================= */}
-
-      <text
-        x="125"
-        y="100"
-        fontSize="11"
-        fontWeight="bold"
-        fill={dark}
-      >
-        WEB
-      </text>
-
-      <text
-        x="90"
-        y="195"
-        fontSize="10"
-        fill={dark}
-      >
-        I-BEAM / MEMBER
-      </text>
+      {/* ===================== LEGEND ===================== */}
+      <g fontSize="15" fontWeight="bold" fill="#000000" fontFamily="sans-serif">
+        <text x="20" y="555">
+          1 — Flange Width
+        </text>
+        <text x="20" y="578">
+          2 — Flange Thickness
+        </text>
+        <text x="20" y="601">
+          3 — Web Width
+        </text>
+        <text x="20" y="624">
+          4 — Web Thickness
+        </text>
+        <text x="330" y="555">
+          5 — Length
+        </text>
+      </g>
     </svg>
   );
 }
