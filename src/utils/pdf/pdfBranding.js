@@ -1,4 +1,4 @@
-import { PAGE_WIDTH, MARGIN } from "./common";
+import { PAGE_WIDTH, MARGIN, CONTENT_WIDTH } from "./common";
 import watermarkImage from "../../assets/watermark-logo.png";
 import { SIGNATURE_DATA_URL } from "../assets";
 
@@ -26,7 +26,7 @@ export function drawSignatureStamp(pdf, sigY, company, opts = {}) {
   const w = opts.width || 60;
   const h = opts.height || w * (169 / 550);
 
-  const rightBlockCenterX = opts.centerX ?? PAGE_WIDTH - MARGIN - 26;
+  const rightBlockCenterX = opts.centerX ?? MARGIN + (CONTENT_WIDTH * 3) / 4;
 
   const x = rightBlockCenterX - w / 2;
   const y = sigY - h - 3;

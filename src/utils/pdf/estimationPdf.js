@@ -75,8 +75,8 @@ export function generateEstimationPdf(doc_, company) {
       overflow: "linebreak",
     },
     headStyles: {
-      fillColor: [50, 62, 77],
-      textColor: 255,
+      fillColor: [226, 232, 240],
+      textColor: 51,
       fontStyle: "bold",
       halign: "center",
       minCellHeight: 8,

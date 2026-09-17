@@ -48,7 +48,11 @@ export function generateMaterialListPdf(doc_, rows, grandTotal, company) {
       cellPadding: 2.5,
       textColor: [20, 30, 40],
     },
-    headStyles: { fillColor: [50, 62, 77], textColor: 255, fontStyle: "bold" },
+    headStyles: {
+      fillColor: [226, 232, 240],
+      textColor: 51,
+      fontStyle: "bold",
+    },
     footStyles: {
       fillColor: [235, 239, 243],
       textColor: [20, 30, 40],
