@@ -1,17 +1,54 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import * as pdfjsLib from "pdfjs-dist";
+import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { downloadPdf, sharePdf } from "../utils/pdfActions";
 
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
 export default function PdfPreviewModal({ pdf, filename, onClose }) {
-  const [url, setUrl] = useState(null);
+  const containerRef = useRef(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!pdf) return;
-    const blobUrl = pdf.output("bloburl");
-    setUrl(blobUrl);
-    return () => URL.revokeObjectURL(blobUrl);
+    let cancelled = false;
+    setLoading(true);
+
+    async function render() {
+      const arrayBuffer = pdf.output("arraybuffer");
+      const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+      if (cancelled || !containerRef.current) return;
+      containerRef.current.innerHTML = "";
+
+      for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.5 });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = "100%";
+        canvas.style.marginBottom = "8px";
+        canvas.style.boxShadow = "0 1px 4px rgba(0,0,0,0.3)";
+
+        const ctx = canvas.getContext("2d");
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        if (cancelled) return;
+        containerRef.current.appendChild(canvas);
+      }
+
+      if (!cancelled) setLoading(false);
+    }
+
+    render();
+    return () => {
+      cancelled = true;
+    };
   }, [pdf]);
 
-  if (!pdf) return null; // nothing to show, modal stays hidden
+  if (!pdf) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/70">
@@ -22,10 +59,13 @@ export default function PdfPreviewModal({ pdf, filename, onClose }) {
         </button>
       </div>
 
-      <div className="flex-1 bg-steel-100">
-        {url && (
-          <iframe title="pdf-preview" src={url} className="h-full w-full" />
+      <div className="flex-1 overflow-y-auto bg-steel-100 p-2">
+        {loading && (
+          <p className="mt-10 text-center text-sm text-steel-500">
+            Loading preview...
+          </p>
         )}
+        <div ref={containerRef} />
       </div>
 
       <div className="grid grid-cols-3 gap-2 border-t border-steel-100 bg-white p-3 safe-bottom">
