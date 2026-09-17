@@ -5,10 +5,11 @@ import {
   MARGIN,
   CONTENT_WIDTH,
   drawCompanyHeader,
+  drawFooterNote,
   fmtMoney,
   fmtDate,
 } from "./common";
-import { drawWatermark } from "./pdfBranding";
+import { drawWatermark, drawSignatureStamp } from "./pdfBranding";
 
 export function generateEstimationPdf(doc_, company) {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
@@ -124,33 +125,57 @@ export function generateEstimationPdf(doc_, company) {
   });
   y += 8;
 
-  pdf.setFont("helvetica", "bold");
-  pdf.text("COMPANY BANK DETAILS:", MARGIN, y);
-  y += 5;
-  pdf.setFont("helvetica", "normal");
-  pdf.text(`BANK NAME : ${company.bankName || ""}`, PAGE_WIDTH - MARGIN, y, {
-    align: "right",
-  });
-  y += 4.6;
-  pdf.text(
-    `ACCOUNT NO : ${company.bankAccountNo || ""}`,
-    PAGE_WIDTH - MARGIN,
-    y,
-    { align: "right" },
-  );
-  y += 4.6;
-  pdf.text(
-    `BRANCH / IFSC CODE : ${company.bankIfsc || ""}`,
-    PAGE_WIDTH - MARGIN,
-    y,
-    { align: "right" },
-  );
-  y += 10;
+  // ---------------- BANK DETAILS + SIGNATURE ----------------
+
+  const sigY = Math.max(y + 5, 250);
+
+  // Bank details at bottom-left
+  const bankX = MARGIN;
+  let bankY = sigY - 22;
 
   pdf.setFont("helvetica", "bold");
-  pdf.text(`for ${company.name || ""},`, PAGE_WIDTH - MARGIN, y, {
-    align: "right",
+  pdf.setFontSize(9);
+
+  pdf.text("COMPANY BANK DETAILS:", bankX, bankY);
+
+  bankY += 5;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(8.5);
+
+  pdf.text(`BANK NAME : ${company.bankName || ""}`, bankX, bankY);
+
+  bankY += 4.5;
+
+  pdf.text(`ACCOUNT NO : ${company.bankAccountNo || ""}`, bankX, bankY);
+
+  bankY += 4.5;
+
+  pdf.text(`BRANCH / IFSC CODE : ${company.bankIfsc || ""}`, bankX, bankY);
+
+  // Signature and seal at bottom-right
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9);
+
+  pdf.text(
+    `For ${company.name || "NextGen Prefab"}`,
+    PAGE_WIDTH - MARGIN,
+    sigY,
+    {
+      align: "right",
+    },
+  );
+
+  drawSignatureStamp(pdf, sigY, company, {
+    centerX: PAGE_WIDTH - MARGIN - 30,
+    width: 55,
   });
+
+  // ---------------------------------------------------------
+
+  let fy = 280;
+  fy = drawFooterNote(pdf, fy, company.jurisdiction || "");
+  drawFooterNote(pdf, 289, "This is a computer generated document.");
 
   return pdf;
 }

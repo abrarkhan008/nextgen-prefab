@@ -317,8 +317,15 @@ export default function InvoiceEditor() {
 
       <ActionBar
         onSave={handleSave}
+        onPreview={handlePreview}
         onDownload={handleDownload}
         onShare={handleShare}
+      />
+
+      <PdfPreviewModal
+        pdf={previewPdf}
+        filename={filename()}
+        onClose={() => setPreviewPdf(null)}
       />
     </div>
   );
@@ -344,18 +351,6 @@ function Row({ label, value, bold }) {
           minimumFractionDigits: 2,
         })}
       </span>
-      <ActionBar
-        onSave={handleSave}
-        onPreview={handlePreview}
-        onDownload={handleDownload}
-        onShare={handleShare}
-      />
-
-      <PdfPreviewModal
-        pdf={previewPdf}
-        filename={filename()}
-        onClose={() => setPreviewPdf(null)}
-      />
     </div>
   );
 }

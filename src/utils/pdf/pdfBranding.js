@@ -32,7 +32,7 @@ export function drawSignatureStamp(pdf, sigY, company, opts = {}) {
   const y = sigY - h - 3;
 
   try {
-    pdf.addImage(signature, "PNG", x, y, w, h);
+    pdf.addImage(signature, "PNG", x, y, w, h, undefined, "FAST");
   } catch (e) {
     console.warn("drawSignatureStamp failed:", e);
   }
@@ -74,7 +74,7 @@ export function drawWatermark(pdf) {
       }),
     );
 
-    pdf.addImage(watermarkImage, "PNG", x, y, w, h);
+    pdf.addImage(watermarkImage, "PNG", x, y, w, h, undefined, "FAST");
 
     pdf.restoreGraphicsState();
   } catch (e) {

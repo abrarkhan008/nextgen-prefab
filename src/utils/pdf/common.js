@@ -25,7 +25,7 @@ export function drawCompanyHeader(doc, company, title) {
   // DRAW LOGO
   if (logo) {
     try {
-      doc.addImage(logo, "PNG", logoX, logoY, logoW, logoH);
+      doc.addImage(logo, "PNG", logoX, logoY, logoW, logoH, undefined, "FAST");
     } catch (e) {
       console.warn("Company logo error:", e);
     }
