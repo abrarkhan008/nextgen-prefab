@@ -23,7 +23,7 @@ export function drawSignatureStamp(pdf, sigY, company, opts = {}) {
 
   if (!signature) return;
 
-  const w = opts.width || 60;
+  const w = opts.width || 80;
   const h = opts.height || w * (169 / 550);
 
   const rightBlockCenterX = opts.centerX ?? MARGIN + (CONTENT_WIDTH * 3) / 4;
