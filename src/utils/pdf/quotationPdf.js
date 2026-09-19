@@ -10,7 +10,7 @@ import {
 } from "./common";
 import { amountInWords } from "../numberToWords";
 import { gstSummary, sumItems } from "../calc";
-import { drawSignatureStamp, drawWatermark } from "./pdfBranding";
+import { drawWatermark } from "./pdfBranding";
 
 // A4 page height in mm (jsPDF default unit here is "mm", format "a4").
 // Defined locally so this file works even if common.js doesn't export it.
@@ -71,7 +71,13 @@ function pageNumber(pdf, n) {
 // Draws the standard letterhead + logo, returns the y position right after it
 function pageHeader(pdf, company, title) {
   drawWatermark(pdf);
-  const y = drawCompanyHeader(pdf, company, title || "");
+
+  const y = drawCompanyHeader(
+    pdf,
+    company,
+    title || "",
+    "(A unit of AM welding and fabrication)",
+  );
 
   return y;
 }
@@ -121,10 +127,10 @@ export function generateQuotationPdf(doc_, company) {
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(20);
-  pdf.text("PROPOSAL FOR PRE ENGINEERED BUILDING", PAGE_WIDTH / 2, 110, {
+  pdf.text("PROPOSAL FOR PRE ENGINEERED BUILDING (PEB)", PAGE_WIDTH / 2, 110, {
     align: "center",
   });
-  pdf.text("(PEB) FOR", PAGE_WIDTH / 2, 122, { align: "center" });
+  pdf.text(" FOR", PAGE_WIDTH / 2, 122, { align: "center" });
   pdf.setFontSize(22);
   pdf.text(clientName.toUpperCase(), PAGE_WIDTH / 2, 145, { align: "center" });
   pdf.setFontSize(14);
@@ -143,9 +149,9 @@ export function generateQuotationPdf(doc_, company) {
   pdf.text(`Date: ${dateStr}`, PAGE_WIDTH - MARGIN, y, { align: "right" });
   y += 10;
 
-  h1(pdf, "PROPOSAL FOR PRE ENGINEERED BUILDING", y);
+  h1(pdf, "PROPOSAL FOR PRE ENGINEERED BUILDING (PEB)", y);
   y += 7;
-  h1(pdf, `(PEB) FOR ${site.toUpperCase()}`, y);
+  h1(pdf, ` FOR ${site.toUpperCase()}`, y);
   y += 12;
 
   pdf.setFont("helvetica", "bold");
@@ -400,11 +406,15 @@ export function generateQuotationPdf(doc_, company) {
   y = pageHeader(pdf, company, "");
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
-  pdf.text(
-    `Estimation no. ${docNo}   Rev.${rev}   Date: ${dateStr}`,
-    MARGIN,
-    y,
-  );
+  pdf.text(`Estimation no. ${docNo}`, MARGIN, y);
+
+  pdf.text(`Rev.${rev}`, PAGE_WIDTH / 2, y, {
+    align: "center",
+  });
+
+  pdf.text(`Date: ${dateStr}`, PAGE_WIDTH - MARGIN, y, {
+    align: "right",
+  });
   y += 10;
 
   const colW = (CONTENT_WIDTH - 8) / 2;
@@ -534,7 +544,7 @@ export function generateQuotationPdf(doc_, company) {
   y += 6;
 
   // Company signatory block (left column)
-  const sigTopY = y;
+  // const sigTopY = y;
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(11);
   pdf.text(company.name.toUpperCase(), MARGIN, y);
@@ -548,11 +558,8 @@ export function generateQuotationPdf(doc_, company) {
   y += 6;
   pdf.text(`Date : ${dateStr}`, MARGIN, y);
   y += 8;
-  pdf.text("Company Seal:", MARGIN, y);
-  y += 10;
-
-  // Signature + stamp image placed above/near the signatory line
-  drawSignatureStamp(pdf, sigTopY + 20, company, { centerX: MARGIN + 70 });
+  // pdf.text("Company Seal:", MARGIN, y);
+  // y += 10;
 
   y += 8;
   pdf.setFont("helvetica", "bold");

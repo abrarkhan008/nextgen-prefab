@@ -5,7 +5,7 @@ export const MARGIN = 12;
 
 export const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 
-export function drawCompanyHeader(doc, company, title) {
+export function drawCompanyHeader(doc, company, title, quotationSubtitle = "") {
   let y = 14;
 
   // ==============================
@@ -34,8 +34,8 @@ export function drawCompanyHeader(doc, company, title) {
   // ==============================
   // COMPANY NAME
   // ==============================
-  doc.setFont("times", "bold");
-  doc.setFontSize(24);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
   doc.setTextColor(210, 0, 0);
 
   doc.text(company.name || "Company Name", textBlockCenter, y, {
@@ -43,6 +43,21 @@ export function drawCompanyHeader(doc, company, title) {
   });
 
   y += 5.5;
+
+  // ==============================
+  // QUOTATION SUBTITLE
+  // ==============================
+  if (quotationSubtitle) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(0, 102, 204);
+
+    doc.text(quotationSubtitle, textBlockCenter, y, {
+      align: "center",
+    });
+
+    y += 4;
+  }
 
   // ==============================
   // COMPANY DETAILS
@@ -102,10 +117,10 @@ export function drawCompanyHeader(doc, company, title) {
 
   y += 3;
 
-  doc.setDrawColor(180, 190, 200);
-  doc.setLineWidth(0.3);
+  // doc.setDrawColor(180, 190, 200);
+  // doc.setLineWidth(0.3);
 
-  doc.line(PAGE_WIDTH / 2 - 18, y, PAGE_WIDTH / 2 + 18, y);
+  // doc.line(PAGE_WIDTH / 2 - 18, y, PAGE_WIDTH / 2 + 18, y);
 
   y += 6;
 
