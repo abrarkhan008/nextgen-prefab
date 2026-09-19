@@ -22,6 +22,12 @@ const TYPE_META = {
     icon: "📝",
     path: "/estimation",
   },
+  decking: {
+    label: "Decking Sheet",
+    color: "bg-orange-700",
+    icon: "🏗️",
+    path: "/decking",
+  },
 };
 
 export default function Home() {

@@ -11,7 +11,8 @@ import InvoiceEditor from "./pages/InvoiceEditor";
 import PaymentHistory from "./pages/PaymentHistory";
 import GstPayment from "./pages/GstPayment";
 import EstimationEditor from "./pages/EstimationEditor";
-
+import DeckingEditor from "./pages/DeckingEditor";
+import DeckingSummary from "./pages/DeckingSummary";
 export default function App() {
   return (
     <HashRouter>
@@ -29,6 +30,8 @@ export default function App() {
           <Route path="/payments" element={<PaymentHistory />} />
           <Route path="/gst" element={<GstPayment />} />
           <Route path="/estimation/:id" element={<EstimationEditor />} />
+          <Route path="/decking/:id" element={<DeckingEditor />} />
+          <Route path="/decking/:id/summary" element={<DeckingSummary />} />
         </Routes>
       </div>
     </HashRouter>
