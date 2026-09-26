@@ -173,9 +173,9 @@ export function generateEstimationPdf(doc_, company) {
 
   // ---------------------------------------------------------
 
-  let fy = 280;
-  fy = drawFooterNote(pdf, fy, company.jurisdiction || "");
-  drawFooterNote(pdf, 289, "This is a computer generated document.");
+  // let fy = 280;
+  // fy = drawFooterNote(pdf, fy, company.jurisdiction || "");
+  // drawFooterNote(pdf, 289, "This is a computer generated document.");
 
   return pdf;
 }
