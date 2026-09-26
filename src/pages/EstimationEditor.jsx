@@ -31,6 +31,7 @@ const DEFAULT_NOTES = [
   "The above estimation is prepared based on the client's requirements.",
   "18% GST extra.",
 ];
+const UNITS = ["KGS", "NO'S", "RFT", "SFT", "MTR", "LTR", "DAYS", "SET"];
 
 function blankDoc() {
   return {
@@ -206,13 +207,22 @@ export default function EstimationEditor() {
                   </div>
                   <div>
                     <label className="field-label">Unit</label>
-                    <input
+                    <select
                       className="field-input"
                       value={it.unit}
                       onChange={(e) =>
                         updateItem(it.id, { unit: e.target.value })
                       }
-                    />
+                    >
+                      <option value="KGS">KGS</option>
+                      <option value="NO'S">NO'S</option>
+                      <option value="RFT">RFT</option>
+                      <option value="SFT">SFT</option>
+                      <option value="MTR">MTR</option>
+                      <option value="LTR">LTR</option>
+                      <option value="DAYS">DAYS</option>
+                      <option value="SET">SET</option>
+                    </select>
                   </div>
                   <div>
                     <label className="field-label">Rate (₹)</label>

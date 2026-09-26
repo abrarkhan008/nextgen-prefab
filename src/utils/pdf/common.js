@@ -4,6 +4,9 @@ export const PAGE_WIDTH = 210;
 export const MARGIN = 12;
 
 export const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+export function up(v) {
+  return String(v ?? "").toUpperCase();
+}
 
 export function drawCompanyHeader(doc, company, title, quotationSubtitle = "") {
   let y = 14;

@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { PAGE_WIDTH, MARGIN, drawCompanyHeader, fmtDate } from "./common";
+import { PAGE_WIDTH, MARGIN, drawCompanyHeader, fmtDate, up } from "./common";
 
 /**
  * rows: [{ label, pieces, weight }]  e.g. [{ label: "6mm Plate", pieces: 12, weight: 84.5 }]
@@ -30,7 +30,7 @@ export function generateMaterialListPdf(doc_, rows, grandTotal, company) {
     startY: y,
     head: [["THICKNESS / GROUP", "PIECES", "WEIGHT (KG)"]],
     body: rows.map((r) => [
-      r.label,
+      up(r.label),
       r.pieces,
       r.weight.toLocaleString("en-IN", { maximumFractionDigits: 2 }),
     ]),

@@ -7,6 +7,7 @@ import {
   drawCompanyHeader,
   fmtMoney,
   fmtDate,
+  up,
 } from "./common";
 import { amountInWords } from "../numberToWords";
 import { gstSummary, sumItems } from "../calc";
@@ -304,9 +305,9 @@ export function generateQuotationPdf(doc_, company) {
     ],
     body: (doc_.items || []).map((it, idx) => [
       idx + 1,
-      it.description,
+      up(it.description),
       it.qty,
-      it.unit,
+      up(it.unit),
       fmtMoney(it.rate),
       fmtMoney(it.amount),
     ]),

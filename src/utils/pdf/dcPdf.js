@@ -10,6 +10,7 @@ import {
   drawFooterNote,
   fmtMoney,
   fmtDate,
+  up,
 } from "./common";
 import { amountInWords } from "../numberToWords";
 import { sumItems } from "../calc";
@@ -60,18 +61,18 @@ export function generateDcPdf(doc_, company) {
   pdf.setFontSize(9);
   pdf.setTextColor(20, 30, 40);
 
-  pdf.text(doc_.client?.name || "", MARGIN, y);
+  pdf.text(up(doc_.client?.name), MARGIN, y);
 
   y += 4.2;
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
 
-  pdf.text(`GST NO: ${doc_.client?.gstNo || ""}`, MARGIN, y);
+  pdf.text(`GST NO: ${up(doc_.client?.gstNo)}`, MARGIN, y);
 
   y += 4.2;
 
-  const billAddressLines = pdf.splitTextToSize(doc_.client?.address || "", 80);
+  const billAddressLines = pdf.splitTextToSize(up(doc_.client?.address), 80);
 
   pdf.text(billAddressLines, MARGIN, y);
 
@@ -90,18 +91,18 @@ export function generateDcPdf(doc_, company) {
   pdf.setFontSize(9);
   pdf.setTextColor(20, 30, 40);
 
-  pdf.text(doc_.shipTo?.name || "", MARGIN, y);
+  pdf.text(up(doc_.shipTo?.name), MARGIN, y);
 
   y += 4.2;
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
 
-  pdf.text(`GST NO: ${doc_.shipTo?.gstNo || ""}`, MARGIN, y);
+  pdf.text(`GST NO: ${up(doc_.shipTo?.gstNo)}`, MARGIN, y);
 
   y += 4.2;
 
-  const shipAddressLines = pdf.splitTextToSize(doc_.shipTo?.address || "", 80);
+  const shipAddressLines = pdf.splitTextToSize(up(doc_.shipTo?.address), 80);
 
   pdf.text(shipAddressLines, MARGIN, y);
 
@@ -151,9 +152,9 @@ export function generateDcPdf(doc_, company) {
   pdf.setFontSize(8.5);
   pdf.setTextColor(20, 30, 40);
 
-  pdf.text(`Driver name: ${doc_.driverName || ""}`, MARGIN, y);
+  pdf.text(`Driver name: ${up(doc_.driverName)}`, MARGIN, y);
 
-  pdf.text(`Phone: ${doc_.driverPhone || ""}`, PAGE_WIDTH - MARGIN - 45, y);
+  pdf.text(`Phone: ${up(doc_.driverPhone)}`, PAGE_WIDTH - MARGIN - 45, y);
 
   y += 6;
 
@@ -175,9 +176,9 @@ export function generateDcPdf(doc_, company) {
   // Items table
   const rows = doc_.items.map((it, idx) => [
     idx + 1,
-    it.description,
-    it.hsnCode || "",
-    `${it.qty} ${it.unit}`,
+    up(it.description),
+    up(it.hsnCode),
+    `${it.qty} ${up(it.unit)}`,
     fmtMoney(it.rate),
     fmtMoney(it.amount),
   ]);
@@ -232,7 +233,10 @@ export function generateDcPdf(doc_, company) {
   if (doc_.notes) {
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
-    const noteLines = pdf.splitTextToSize(`NOTE: ${doc_.notes}`, CONTENT_WIDTH);
+    const noteLines = pdf.splitTextToSize(
+      `NOTE: ${up(doc_.notes)}`,
+      CONTENT_WIDTH,
+    );
     pdf.text(noteLines, MARGIN, y);
     y += noteLines.length * 3.8 + 6;
   } else {

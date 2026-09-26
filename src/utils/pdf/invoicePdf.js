@@ -10,6 +10,7 @@ import {
   drawFooterNote,
   fmtMoney,
   fmtDate,
+  up,
 } from "./common";
 import { amountInWords } from "../numberToWords";
 import { gstSummary } from "../calc";
@@ -40,18 +41,18 @@ export function generateInvoicePdf(doc_, company) {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
 
-  pdf.text(doc_.client?.name || "", MARGIN, y);
+  pdf.text(up(doc_.client?.name), MARGIN, y);
 
   y += 4.2;
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
 
-  pdf.text(`GST NO: ${doc_.client?.gstNo || ""}`, MARGIN, y);
+  pdf.text(`GST NO: ${up(doc_.client?.gstNo)}`, MARGIN, y);
 
   y += 4.2;
 
-  const billAddressLines = pdf.splitTextToSize(doc_.client?.address || "", 80);
+  const billAddressLines = pdf.splitTextToSize(up(doc_.client?.address), 80);
 
   pdf.text(billAddressLines, MARGIN, y);
 
@@ -68,18 +69,18 @@ export function generateInvoicePdf(doc_, company) {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
 
-  pdf.text(doc_.shipTo?.name || "", MARGIN, y);
+  pdf.text(up(doc_.shipTo?.name), MARGIN, y);
 
   y += 4.2;
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
 
-  pdf.text(`GST NO: ${doc_.shipTo?.gstNo || ""}`, MARGIN, y);
+  pdf.text(`GST NO: ${up(doc_.shipTo?.gstNo)}`, MARGIN, y);
 
   y += 4.2;
 
-  const shipAddressLines = pdf.splitTextToSize(doc_.shipTo?.address || "", 80);
+  const shipAddressLines = pdf.splitTextToSize(up(doc_.shipTo?.address), 80);
 
   pdf.text(shipAddressLines, MARGIN, y);
 
@@ -127,9 +128,9 @@ export function generateInvoicePdf(doc_, company) {
 
   const rows = doc_.items.map((it, idx) => [
     idx + 1,
-    it.description,
-    it.hsnCode || "",
-    `${it.qty} ${it.unit}`,
+    up(it.description),
+    up(it.hsnCode),
+    `${it.qty} ${up(it.unit)}`,
     fmtMoney(it.rate),
     fmtMoney(it.amount),
   ]);
@@ -145,8 +146,11 @@ export function generateInvoicePdf(doc_, company) {
       cellPadding: 2,
       textColor: [20, 30, 40],
     },
-    headStyles: {  fillColor: [226, 232, 240],
-      textColor: 51, fontStyle: "bold" },
+    headStyles: {
+      fillColor: [226, 232, 240],
+      textColor: 51,
+      fontStyle: "bold",
+    },
     columnStyles: {
       0: { cellWidth: 12, halign: "center" },
       1: { cellWidth: "auto" },
@@ -208,7 +212,10 @@ export function generateInvoicePdf(doc_, company) {
   if (doc_.notes) {
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
-    const noteLines = pdf.splitTextToSize(`NOTE: ${doc_.notes}`, CONTENT_WIDTH);
+    const noteLines = pdf.splitTextToSize(
+      `NOTE: ${up(doc_.notes)}`,
+      CONTENT_WIDTH,
+    );
     pdf.text(noteLines, MARGIN, y);
     y += noteLines.length * 3.8 + 4;
   }
