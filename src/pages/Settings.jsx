@@ -1,6 +1,29 @@
 import { useState } from "react";
 import TopBar from "../components/TopBar";
 import { getCompany, saveCompany } from "../utils/company";
+function NeedToggle({ label, value, onChange }) {
+  return (
+    <div>
+      <label className="field-label">{label}</label>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={value ? "btn-primary" : "btn-secondary"}
+        >
+          NEED
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={!value ? "btn-primary" : "btn-secondary"}
+        >
+          NOT NEED
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Settings() {
   const [company, setCompany] = useState(getCompany());
@@ -180,8 +203,40 @@ export default function Settings() {
               onChange={(e) => update({ jurisdiction: e.target.value })}
             />
           </div>
+          <div>
+            <label className="field-label">Jurisdiction line</label>
+            <input
+              className="field-input"
+              value={company.jurisdiction}
+              onChange={(e) => update({ jurisdiction: e.target.value })}
+            />
+          </div>
+          {/* ADD THIS */}
+          <NeedToggle
+            label="Show jurisdiction line at bottom of PDF"
+            value={company.showJurisdiction !== false}
+            onChange={(v) => update({ showJurisdiction: v })}
+          />
         </div>
       </div>
+              <div className="card space-y-3">
+          <p className="text-sm font-bold text-steel-800">
+            Header Sub-line (A unit of ...)
+          </p>
+          <div>
+            <label className="field-label">Text</label>
+            <input
+              className="field-input"
+              value={company.unitLineText || ""}
+              onChange={(e) => update({ unitLineText: e.target.value })}
+            />
+          </div>
+          <NeedToggle
+            label="Show this line under company name (Estimation & Quotation)"
+            value={company.showUnitLine !== false}
+            onChange={(v) => update({ showUnitLine: v })}
+          />
+        </div>
 
       <div className="fixed bottom-0 left-0 right-0 border-t border-steel-100 bg-white p-4 safe-bottom">
         <button onClick={save} className="btn-primary w-full">

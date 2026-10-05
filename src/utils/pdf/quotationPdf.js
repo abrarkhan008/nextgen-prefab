@@ -10,7 +10,7 @@ import {
   up,
 } from "./common";
 import { amountInWords } from "../numberToWords";
-import { gstSummary, sumItems } from "../calc";
+import { gstSummary, sumItems, roundTotal } from "../calc";
 import { drawWatermark } from "./pdfBranding";
 
 // A4 page height in mm (jsPDF default unit here is "mm", format "a4").
@@ -73,14 +73,12 @@ function pageNumber(pdf, n) {
 function pageHeader(pdf, company, title) {
   drawWatermark(pdf);
 
-  const y = drawCompanyHeader(
-    pdf,
-    company,
-    title || "",
-    "(A unit of AM welding and fabrication)",
-  );
+  const unitLine =
+    company.showUnitLine !== false
+      ? company.unitLineText || "(A unit of AM welding and fabrication)"
+      : undefined;
 
-  return y;
+  return drawCompanyHeader(pdf, company, title || "", unitLine);
 }
 
 function numberedList(pdf, items, x, y, opts = {}) {
@@ -109,13 +107,15 @@ export function generateQuotationPdf(doc_, company) {
   const clientName = doc_.client?.name || "";
   const site = doc_.siteLocation || doc_.project?.place || "";
   const specs = doc_.specs || {};
-  const ourScope = doc_.ourScope?.length ? doc_.ourScope : DEFAULT_OUR_SCOPE;
-  const clientScope = doc_.clientScope?.length
-    ? doc_.clientScope
-    : DEFAULT_CLIENT_SCOPE;
-  const paymentTerms = doc_.paymentTerms?.length
-    ? doc_.paymentTerms
-    : DEFAULT_PAYMENT_TERMS;
+  const ourScope = (
+    doc_.ourScope?.length ? doc_.ourScope : DEFAULT_OUR_SCOPE
+  ).map((s) => up(s));
+  const clientScope = (
+    doc_.clientScope?.length ? doc_.clientScope : DEFAULT_CLIENT_SCOPE
+  ).map((s) => up(s));
+  const paymentTerms = (
+    doc_.paymentTerms?.length ? doc_.paymentTerms : DEFAULT_PAYMENT_TERMS
+  ).map((s) => up(s));
 
   // ===================== PAGE 1 : COVER =====================
   pageHeader(pdf, company, "");
@@ -170,15 +170,20 @@ export function generateQuotationPdf(doc_, company) {
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
-  letterBody.split("\n\n").forEach((para) => {
-    const lines = pdf.splitTextToSize(para, CONTENT_WIDTH);
-    pdf.text(lines, MARGIN, y);
-    y += lines.length * 4.4 + 3;
-  });
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  up(letterBody)
+    .split("\n\n")
+    .forEach((para) => {
+      const lines = pdf.splitTextToSize(para, CONTENT_WIDTH);
+      pdf.text(lines, MARGIN, y);
+      y += lines.length * 4.4 + 3;
+    });
+
   y += 6;
 
   pdf.setFont("helvetica", "bold");
-  pdf.text(doc_.contactPerson || "", MARGIN, y);
+  pdf.text(up(doc_.contactPerson), MARGIN, y);
   y += 4.4;
   pdf.setFont("helvetica", "normal");
   pdf.text(`Mobile: ${doc_.contactMobile || ""}`, MARGIN, y);
@@ -368,7 +373,7 @@ export function generateQuotationPdf(doc_, company) {
     });
     y += 12;
   } else {
-    grandTotal = sumItems(doc_.items);
+    grandTotal = roundTotal(sumItems(doc_.items));
     pdf.setFillColor(235, 239, 243);
     pdf.rect(MARGIN, y, CONTENT_WIDTH, 8, "F");
     pdf.setFont("helvetica", "bold");
@@ -395,7 +400,7 @@ export function generateQuotationPdf(doc_, company) {
   y += 4.4;
   pdf.setFont("helvetica", "normal");
   const noteLines = pdf.splitTextToSize(
-    doc_.qtyNote ||
+    up(doc_.qtyNote) ||
       "1. THE ABOVE QTY IS TENTATIVE, MAY VARY +/-5%. BILLING WILL BE DONE FOR ACTUAL QTY.",
     CONTENT_WIDTH,
   );
@@ -513,10 +518,10 @@ export function generateQuotationPdf(doc_, company) {
   terms.forEach(([title, body], idx) => {
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
-    pdf.text(`${idx + 1}. ${title}`, MARGIN, y);
+    pdf.text(`${idx + 1}. ${up(title)}`, MARGIN, y);
     y += 4.6;
     pdf.setFont("helvetica", "normal");
-    const lines = pdf.splitTextToSize(body, CONTENT_WIDTH);
+    const lines = pdf.splitTextToSize(up(body), CONTENT_WIDTH);
     pdf.text(lines, MARGIN, y);
     y += lines.length * 4.2 + 3.5;
   });
@@ -538,7 +543,7 @@ export function generateQuotationPdf(doc_, company) {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
   confirmParagraphs.forEach((para) => {
-    const lines = pdf.splitTextToSize(para, CONTENT_WIDTH);
+    const lines = pdf.splitTextToSize(up(para), CONTENT_WIDTH);
     pdf.text(lines, MARGIN, y);
     y += lines.length * 4.4 + 3.5;
   });

@@ -230,7 +230,9 @@ export const emptyDeckRow = (label = "") => ({
 
 export function deckAreaSqft(row) {
   const area = num(row?.length) * num(row?.width);
-  return row?.unit === "ft" ? area : area * SQFT_PER_SQM;
+  if (row?.unit === "ft") return area;
+  if (row?.unit === "mm") return (area / 1000000) * SQFT_PER_SQM;
+  return area * SQFT_PER_SQM;
 }
 
 export function deckRowWeight(row) {

@@ -55,6 +55,13 @@ export function computeItemAmount(item) {
   const rate = Number(item.rate) || 0;
   return round2(qty * rate);
 }
+// 4900.30 -> 4900 | 4900.50 -> 4900 | 4900.51 -> 4901 | 4900.52 -> 4901
+export function roundTotal(n) {
+  const value = Number(n) || 0;
+  const whole = Math.floor(value);
+  const paise = Math.round((value - whole) * 100) / 100;
+  return paise > 0.5 ? whole + 1 : whole;
+}
 
 /** GST + round-off summary block used by DC bill / Tax invoice / Quotation */
 export function gstSummary(items, cgstPercent, sgstPercent) {

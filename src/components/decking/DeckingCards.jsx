@@ -26,6 +26,8 @@ import {
   fmtKg,
 } from "../../utils/decking";
 import { boltWeight } from "../../utils/calc";
+import ThicknessInput from "../ThicknessInput";
+import LengthInput from "../LengthInput";
 
 const card = "space-y-1.5 rounded-lg border border-steel-200 p-2";
 
@@ -82,7 +84,15 @@ export function FoundationBoltCard({ row, onChange, onRemove }) {
 // ---------------------------------------------------------------------
 // Bolts & nuts / studs  (0.000006165 x d^2 x l x qty)
 // ---------------------------------------------------------------------
-function RoundBarCard({ row, onChange, onRemove, labelPlaceholder, dLabel, lLabel, weight }) {
+function RoundBarCard({
+  row,
+  onChange,
+  onRemove,
+  labelPlaceholder,
+  dLabel,
+  lLabel,
+  weight,
+}) {
   const set = (patch) => onChange({ ...row, ...patch });
   return (
     <div className={card}>
@@ -104,7 +114,11 @@ function RoundBarCard({ row, onChange, onRemove, labelPlaceholder, dLabel, lLabe
             value={row.l}
             onChange={(v) => set({ l: v })}
           />
-          <NumField label="Qty" value={row.qty} onChange={(v) => set({ qty: v })} />
+          <NumField
+            label="Qty"
+            value={row.qty}
+            onChange={(v) => set({ qty: v })}
+          />
         </div>
         <div className="flex items-center justify-center">
           <BoltDiagram />
@@ -166,6 +180,7 @@ export function DeckSheetCard({ row, onChange, onRemove }) {
         >
           <option value="m">Metre (m)</option>
           <option value="ft">Feet (ft)</option>
+          <option value="mm">Millimetre (mm)</option>
         </select>
       </div>
 
@@ -244,7 +259,7 @@ export function PebMemberCard({ row, onChange, onRemove }) {
             value={row.flangeWidth}
             onChange={(v) => set({ flangeWidth: v })}
           />
-          <NumField
+          <ThicknessInput
             label="Flange Thick (mm)"
             value={row.flangeThick}
             onChange={(v) => set({ flangeThick: v })}
@@ -254,17 +269,21 @@ export function PebMemberCard({ row, onChange, onRemove }) {
             value={row.webWidth}
             onChange={(v) => set({ webWidth: v })}
           />
-          <NumField
+          <ThicknessInput
             label="Web Thick (mm)"
             value={row.webThick}
             onChange={(v) => set({ webThick: v })}
           />
-          <NumField
+          <LengthInput
             label="Length (m)"
             value={row.length}
             onChange={(v) => set({ length: v })}
           />
-          <NumField label="Qty" value={row.qty} onChange={(v) => set({ qty: v })} />
+          <NumField
+            label="Qty"
+            value={row.qty}
+            onChange={(v) => set({ qty: v })}
+          />
         </div>
         <div className="flex w-32 items-center justify-center">
           <MemberDiagram />
@@ -366,12 +385,16 @@ export function SectionMemberCard({ row, onChange, onRemove }) {
       )}
 
       <div className="grid grid-cols-2 gap-2">
-        <NumField
+        <LengthInput
           label="Length (m)"
           value={row.length}
           onChange={(v) => set({ length: v })}
         />
-        <NumField label="Qty" value={row.qty} onChange={(v) => set({ qty: v })} />
+        <NumField
+          label="Qty"
+          value={row.qty}
+          onChange={(v) => set({ qty: v })}
+        />
       </div>
       <p className="text-xs text-steel-500">
         Section weight: {fmtKg(sectionKgm(row))} kg/m x Length x Qty
@@ -432,12 +455,12 @@ export function TubeMemberCard({ row, onChange, onRemove }) {
               />
             </>
           )}
-          <NumField
+          <ThicknessInput
             label="Thickness (T) (mm)"
             value={row.thickness}
             onChange={(v) => set({ thickness: v })}
           />
-          <NumField
+          <LengthInput
             label="Length (m)"
             value={row.length}
             onChange={(v) => set({ length: v })}

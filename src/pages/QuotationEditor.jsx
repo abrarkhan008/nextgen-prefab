@@ -19,6 +19,7 @@ import {
   memberRows,
   sumItems,
   gstSummary,
+  roundTotal,
   BRACING_TYPES,
   bracingUnitWeight,
   bracingTotalWeight,
@@ -494,7 +495,7 @@ export default function QuotationEditor() {
   const total = doc_.applyGst
     ? gstSummary(doc_.items, company.cgstPercent, company.sgstPercent)
         .grandTotal
-    : sumItems(doc_.items);
+    : roundTotal(sumItems(doc_.items));
 
   // Small reusable dropdown for the "CONSIDERED / NOT CONSIDERED" style
   // fields so the Specifications card below stays short and readable.
@@ -1619,11 +1620,6 @@ export default function QuotationEditor() {
         </div>
       </div>
 
-      <ActionBar
-        onSave={handleSave}
-        onDownload={handleDownload}
-        onShare={handleShare}
-      />
       <ActionBar
         onSave={handleSave}
         onPreview={handlePreview}

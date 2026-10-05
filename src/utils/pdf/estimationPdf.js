@@ -8,27 +8,48 @@ import {
   drawFooterNote,
   fmtMoney,
   fmtDate,
+  up,
 } from "./common";
+import { sumItems, roundTotal } from "../calc";
 import { drawWatermark, drawSignatureStamp } from "./pdfBranding";
+
+const PAGE_BOTTOM = 285; // do not write below this line
+const SIGN_BLOCK_NEEDED = 45; // space needed for bank details + signature
 
 export function generateEstimationPdf(doc_, company) {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
 
   drawWatermark(pdf);
-  let y = drawCompanyHeader(pdf, company, "ESTIMATION");
+
+  // "(A unit of ...)" line - only if Settings says NEED
+  const unitLine =
+    company.showUnitLine !== false ? company.unitLineText || "" : "";
+
+  let y = drawCompanyHeader(pdf, company, "ESTIMATION", unitLine || undefined);
+
+  // If there is no space left, go to a new page (with watermark)
+  const ensureSpace = (needed) => {
+    if (y + needed > PAGE_BOTTOM) {
+      pdf.addPage();
+      drawWatermark(pdf);
+      y = 20;
+    }
+  };
+
+  const grandTotal = roundTotal(sumItems(doc_.items || []));
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9.5);
   pdf.setTextColor(20, 30, 40);
 
   pdf.text("TO.", MARGIN, y);
-  pdf.text(`E.O.NO : ${doc_.docNo || ""}`, PAGE_WIDTH - MARGIN, y, {
+  pdf.text(`E.O.NO : ${up(doc_.docNo)}`, PAGE_WIDTH - MARGIN, y, {
     align: "right",
   });
   y += 5;
 
   pdf.setFont("helvetica", "bold");
-  pdf.text((doc_.client?.name || "").toUpperCase(), MARGIN, y);
+  pdf.text(up(doc_.client?.name), MARGIN, y);
   pdf.setFont("helvetica", "normal");
   pdf.text(`DATE : ${fmtDate(doc_.date)}`, PAGE_WIDTH - MARGIN, y, {
     align: "right",
@@ -36,7 +57,7 @@ export function generateEstimationPdf(doc_, company) {
   y += 5;
 
   if (doc_.client?.address) {
-    pdf.text(doc_.client.address, MARGIN, y);
+    pdf.text(up(doc_.client.address), MARGIN, y);
     y += 5;
   }
   y += 4;
@@ -47,7 +68,7 @@ export function generateEstimationPdf(doc_, company) {
       [
         "SL NO",
         "CATEGORY (WITH MATERIAL)",
-        "QTY (Aprox)",
+        "QTY (APROX)",
         "UNIT",
         "RATE",
         "AMOUNT",
@@ -55,15 +76,13 @@ export function generateEstimationPdf(doc_, company) {
     ],
     body: (doc_.items || []).map((it, idx) => [
       idx + 1,
-      it.category,
+      up(it.category),
       it.qty,
-      it.unit,
+      up(it.unit),
       fmtMoney(it.rate),
       fmtMoney(it.amount),
     ]),
-    foot: [
-      ["", doc_.designNote || "", "", "TOTAL", "", fmtMoney(doc_.grandTotal)],
-    ],
+    foot: [["", up(doc_.designNote), "", "TOTAL", "", fmtMoney(grandTotal)]],
     theme: "grid",
     styles: {
       font: "helvetica",
@@ -73,6 +92,7 @@ export function generateEstimationPdf(doc_, company) {
       lineColor: [150, 160, 170],
       lineWidth: 0.2,
       overflow: "linebreak",
+      fillColor: false, // <-- lets the watermark show through the table
     },
     headStyles: {
       fillColor: [226, 232, 240],
@@ -97,10 +117,21 @@ export function generateEstimationPdf(doc_, company) {
       5: { cellWidth: 30, halign: "right" },
     },
     margin: { left: MARGIN, right: MARGIN },
+    // watermark on pages 2, 3... created by the table
+    willDrawPage: () => {
+      if (pdf.internal.getCurrentPageInfo().pageNumber > 1) {
+        drawWatermark(pdf);
+      }
+    },
   });
   y = pdf.lastAutoTable.finalY + 8;
 
   if (doc_.materialUsed) {
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    const lines = pdf.splitTextToSize(up(doc_.materialUsed), CONTENT_WIDTH);
+    ensureSpace(lines.length * 4.4 + 12);
+
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(200, 0, 0);
     pdf.setFontSize(9);
@@ -108,62 +139,57 @@ export function generateEstimationPdf(doc_, company) {
     y += 4.6;
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(20, 30, 40);
-    const lines = pdf.splitTextToSize(doc_.materialUsed, CONTENT_WIDTH);
     pdf.text(lines, MARGIN, y);
     y += lines.length * 4.4 + 5;
   }
 
+  ensureSpace(15);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
+  pdf.setTextColor(20, 30, 40);
   pdf.text("NOTE:", MARGIN, y);
   y += 4.6;
   pdf.setFont("helvetica", "normal");
-  (doc_.notes || []).forEach((n, i) => {
-    const lines = pdf.splitTextToSize(`${i + 1}.${n}`, CONTENT_WIDTH);
-    pdf.text(lines, MARGIN, y);
-    y += lines.length * 4.4;
-  });
+  (doc_.notes || [])
+    .filter((n) => (n || "").trim() !== "")
+    .forEach((n, i) => {
+      const lines = pdf.splitTextToSize(up(`${i + 1}.${n}`), CONTENT_WIDTH);
+      ensureSpace(lines.length * 4.4);
+      pdf.text(lines, MARGIN, y);
+      y += lines.length * 4.4;
+    });
   y += 8;
 
   // ---------------- BANK DETAILS + SIGNATURE ----------------
+  // If not enough space on this page -> whole block goes to next page
+  ensureSpace(SIGN_BLOCK_NEEDED);
 
-  const sigY = Math.max(y + 5, 250);
+  const sigY = Math.max(y + 30, 250);
 
-  // Bank details at bottom-left
   const bankX = MARGIN;
   let bankY = sigY - 22;
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
-
+  pdf.setTextColor(20, 30, 40);
   pdf.text("COMPANY BANK DETAILS:", bankX, bankY);
-
   bankY += 5;
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8.5);
-
-  pdf.text(`BANK NAME : ${company.bankName || ""}`, bankX, bankY);
-
+  pdf.text(`BANK NAME : ${up(company.bankName)}`, bankX, bankY);
   bankY += 4.5;
-
-  pdf.text(`ACCOUNT NO : ${company.bankAccountNo || ""}`, bankX, bankY);
-
+  pdf.text(`ACCOUNT NO : ${up(company.bankAccountNo)}`, bankX, bankY);
   bankY += 4.5;
+  pdf.text(`BRANCH / IFSC CODE : ${up(company.bankIfsc)}`, bankX, bankY);
 
-  pdf.text(`BRANCH / IFSC CODE : ${company.bankIfsc || ""}`, bankX, bankY);
-
-  // Signature and seal at bottom-right
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
-
   pdf.text(
-    `For ${company.name || "NextGen Prefab"}`,
+    `FOR ${up(company.name || "NextGen Prefab")}`,
     PAGE_WIDTH - MARGIN,
     sigY,
-    {
-      align: "right",
-    },
+    { align: "right" },
   );
 
   drawSignatureStamp(pdf, sigY, company, {
@@ -171,11 +197,11 @@ export function generateEstimationPdf(doc_, company) {
     width: 55,
   });
 
-  // ---------------------------------------------------------
-
-  // let fy = 280;
-  // fy = drawFooterNote(pdf, fy, company.jurisdiction || "");
-  // drawFooterNote(pdf, 289, "This is a computer generated document.");
+  // Jurisdiction footer - only if Settings says NEED
+  // (delete these 3 lines if you never want it on Estimation)
+  if (company.showJurisdiction !== false) {
+    drawFooterNote(pdf, 289, up(company.jurisdiction));
+  }
 
   return pdf;
 }

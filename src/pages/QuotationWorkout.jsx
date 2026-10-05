@@ -10,9 +10,9 @@ import {
   emptyRateRow,
   emptyBracingRow,
   emptyPlate,
- emptyBoltRow,
-emptyPurlinRow,
-memberRowWeight,
+  emptyBoltRow,
+  emptyPurlinRow,
+  memberRowWeight,
   rateRowWeight,
   boltRowWeight,
   sectionTotalWeight,
@@ -34,6 +34,9 @@ import FoundationBoltDiagram from "../components/FoundationBoltDiagram";
 import ConnectionPlateDiagram from "../components/ConnectionPlateDiagram";
 import { emptyItem } from "../components/ItemsTable";
 import BuildingPlanForm from "../components/BuildingPlanForm";
+import CollapsibleRow from "../components/CollapsibleRow";
+import ThicknessInput from "../components/ThicknessInput";
+import LengthInput from "../components/LengthInput";
 
 // Same formulas already used in QuotationEditor.jsx, repeated here so this
 // page shows the identical numbers without importing a page component.
@@ -154,15 +157,11 @@ function MemberRowCard({ row, onChange, onRemove }) {
             />
           </div>
 
-          <div>
-            <label className="field-label">Flange Thick (mm)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={row.flangeThick}
-              onChange={(e) => set({ flangeThick: e.target.value })}
-            />
-          </div>
+          <ThicknessInput
+            label="Flange Thick (mm)"
+            value={row.flangeThick}
+            onChange={(v) => set({ flangeThick: v })}
+          />
 
           <div>
             <label className="field-label">Web Width (mm)</label>
@@ -174,25 +173,17 @@ function MemberRowCard({ row, onChange, onRemove }) {
             />
           </div>
 
-          <div>
-            <label className="field-label">Web Thick (mm)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={row.webThick}
-              onChange={(e) => set({ webThick: e.target.value })}
-            />
-          </div>
+          <ThicknessInput
+            label="Web Thick (mm)"
+            value={row.webThick}
+            onChange={(v) => set({ webThick: v })}
+          />
 
-          <div>
-            <label className="field-label">Length (m)</label>
-            <input
-              type="number"
-              className="field-input"
-              value={row.length}
-              onChange={(e) => set({ length: e.target.value })}
-            />
-          </div>
+          <LengthInput
+            label="Length (m)"
+            value={row.length}
+            onChange={(v) => set({ length: v })}
+          />
 
           <div>
             <label className="field-label">Qty</label>
@@ -217,19 +208,11 @@ function MemberRowCard({ row, onChange, onRemove }) {
           <div className="flex gap-3">
             {/* LEFT SIDE - CONNECTION PLATE INPUTS */}
             <div className="flex-1 space-y-1.5">
-              <div>
-                <label className="field-label">1. Length (m)</label>
-                <input
-                  type="number"
-                  className="field-input"
-                  value={p.length}
-                  onChange={(e) =>
-                    updatePlate(idx, {
-                      length: e.target.value,
-                    })
-                  }
-                />
-              </div>
+              <LengthInput
+                label="1. Length (m)"
+                value={p.length}
+                onChange={(v) => updatePlate(idx, { length: v })}
+              />
 
               <div>
                 <label className="field-label">2. Width (mm)</label>
@@ -372,15 +355,11 @@ function RateRowCard({ row, section, onChange, onRemove }) {
             />
           </div>
           {section?.hasThickness && (
-            <div>
-              <label className="field-label">1. Thickness (mm)</label>
-              <input
-                type="number"
-                className="field-input"
-                value={row.thickness}
-                onChange={(e) => set({ thickness: e.target.value })}
-              />
-            </div>
+            <ThicknessInput
+              label="1. Thickness (mm)"
+              value={row.thickness}
+              onChange={(v) => set({ thickness: v })}
+            />
           )}
           <div>
             <label className="field-label">Weight / Unit (kg)</label>
@@ -718,24 +697,16 @@ function PurlinRowCard({ row, onChange, onRemove }) {
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <div>
-          <label className="field-label">Thickness (mm)</label>
-          <input
-            type="number"
-            className="field-input"
-            value={row.thickness}
-            onChange={(e) => set({ thickness: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="field-label">Length (m)</label>
-          <input
-            type="number"
-            className="field-input"
-            value={row.length}
-            onChange={(e) => set({ length: e.target.value })}
-          />
-        </div>
+        <ThicknessInput
+          label="Thickness (mm)"
+          value={row.thickness}
+          onChange={(v) => set({ thickness: v })}
+        />
+        <LengthInput
+          label="Length (m)"
+          value={row.length}
+          onChange={(v) => set({ length: v })}
+        />
         <div>
           <label className="field-label">Qty</label>
           <input
@@ -759,6 +730,8 @@ export default function QuotationWorkout() {
   const navigate = useNavigate();
   const [doc_, setDoc] = useState(null);
   const [showPlanForm, setShowPlanForm] = useState(false);
+  const [closed, setClosed] = useState({});
+  const toggle = (rid) => setClosed((c) => ({ ...c, [rid]: !c[rid] }));
 
   useEffect(() => {
     const existing = getDocument(id);
@@ -799,6 +772,25 @@ export default function QuotationWorkout() {
         r.id === rowId ? updated : r,
       ),
     });
+  const addSectionRow = (section) => {
+    const rows = doc_.workout[section.key] || [];
+    addRow(section.key, () => {
+      const label = `${section.prefix}${rows.length + 1}`;
+      if (section.key === "boltsNuts") return emptyBoltRow(label);
+      if (section.type === SECTION_TYPES.MEMBER) return emptyMemberRow(label);
+      if (section.type === SECTION_TYPES.BRACING) return emptyBracingRow(label);
+      return emptyRateRow(label, section.defaultUnit);
+    });
+  };
+
+  const rowWeightOf = (section, r) => {
+    if (section.key === "boltsNuts") return boltRowWeight(r);
+    if (section.type === SECTION_TYPES.MEMBER) return memberRowWeight(r);
+    if (section.type === SECTION_TYPES.BRACING) return bracingTotalWeight(r);
+    if (section.key === "sagRods")
+      return ((Number(r.size) || 0) ** 2 / 162) * (Number(r.qty) || 0);
+    return rateRowWeight(r);
+  };
 
   const foundationWeight = foundationBoltTotalWeight(
     doc_.project.foundationBolt,
@@ -1063,7 +1055,7 @@ export default function QuotationWorkout() {
         </div>
 
         {/* 2-13. all repeating sections, driven by SECTIONS array */}
-        {SECTIONS.map((section, idx) => {
+        {/* {SECTIONS.map((section, idx) => {
           const rows = doc_.workout[section.key] || [];
           const total = sectionTotalWeight(section, rows);
           return (
@@ -1125,6 +1117,75 @@ export default function QuotationWorkout() {
               </div>
             </div>
           );
+        })} */}
+        {SECTIONS.map((section, idx) => {
+          const rows = doc_.workout[section.key] || [];
+          const total = sectionTotalWeight(section, rows);
+          return (
+            <div key={section.key} className="card space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold text-steel-800">
+                  {idx + 2}. {section.title}
+                </p>
+                <button
+                  className="btn-secondary px-3 py-1 text-xs"
+                  onClick={() => addSectionRow(section)}
+                >
+                  + Add
+                </button>
+              </div>
+
+              {rows.length === 0 && (
+                <p className="text-xs text-steel-400">
+                  No rows yet. Tap + Add.
+                </p>
+              )}
+
+              {rows.map((row) => {
+                const commonProps = {
+                  row,
+                  onChange: (updated) =>
+                    updateRow(section.key, row.id, updated),
+                  onRemove: () => removeRow(section.key, row.id),
+                };
+                let card;
+                if (section.key === "boltsNuts")
+                  card = <BoltRowCard {...commonProps} />;
+                else if (section.type === SECTION_TYPES.MEMBER)
+                  card = <MemberRowCard {...commonProps} />;
+                else if (section.type === SECTION_TYPES.BRACING)
+                  card = <BracingRowCard {...commonProps} />;
+                else if (section.key === "sagRods")
+                  card = <SagRodRowCard {...commonProps} />;
+                else card = <RateRowCard {...commonProps} section={section} />;
+
+                return (
+                  <CollapsibleRow
+                    key={row.id}
+                    title={row.label}
+                    weight={fmt(rowWeightOf(section, row))}
+                    open={!closed[row.id]}
+                    onToggle={() => toggle(row.id)}
+                  >
+                    {card}
+                  </CollapsibleRow>
+                );
+              })}
+
+              {rows.length > 0 && (
+                <button
+                  className="btn-secondary w-full"
+                  onClick={() => addSectionRow(section)}
+                >
+                  + Add {section.title}
+                </button>
+              )}
+
+              <div className="rounded-lg bg-steel-100 px-3 py-2 text-xs font-bold text-steel-700">
+                Section Total: {fmt(total)} KG
+              </div>
+            </div>
+          );
         })}
 
         {/* 14. Purlin (roof / cladding) */}
@@ -1147,13 +1208,26 @@ export default function QuotationWorkout() {
           )}
 
           {purlins.map((p) => (
-            <PurlinRowCard
+            <CollapsibleRow
               key={p.id}
-              row={p}
-              onChange={(updated) => updatePurlinRow(p.id, updated)}
-              onRemove={() => removePurlinRow(p.id)}
-            />
+              title={p.label}
+              weight={fmt(purlinSectionWeight(p).totalWeight)}
+              open={!closed[p.id]}
+              onToggle={() => toggle(p.id)}
+            >
+              <PurlinRowCard
+                row={p}
+                onChange={(updated) => updatePurlinRow(p.id, updated)}
+                onRemove={() => removePurlinRow(p.id)}
+              />
+            </CollapsibleRow>
           ))}
+
+          {purlins.length > 0 && (
+            <button className="btn-secondary w-full" onClick={addPurlinRow}>
+              + Add Purlin
+            </button>
+          )}
 
           <div className="rounded-lg bg-steel-100 px-3 py-2 text-xs font-bold text-steel-700">
             Purlin Total: {fmt(purlinWeight)} KG

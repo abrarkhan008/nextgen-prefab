@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import ActionBar from "../components/ActionBar";
+import { roundTotal } from "../utils/calc";
 import {
   getDocument,
   saveDocument,
@@ -80,9 +81,8 @@ export default function EstimationEditor() {
   const removeItem = (itemId) =>
     setDoc((d) => ({ ...d, items: d.items.filter((it) => it.id !== itemId) }));
 
-  const grandTotal = doc_.items.reduce(
-    (s, it) => s + (Number(it.amount) || 0),
-    0,
+  const grandTotal = roundTotal(
+    doc_.items.reduce((s, it) => s + (Number(it.amount) || 0), 0),
   );
 
   const linesToArray = (text) => (text || "").split("\n");
@@ -300,11 +300,6 @@ export default function EstimationEditor() {
         </div>
       </div>
 
-      <ActionBar
-        onSave={handleSave}
-        onDownload={handleDownload}
-        onShare={handleShare}
-      />
       <ActionBar
         onSave={handleSave}
         onPreview={handlePreview}

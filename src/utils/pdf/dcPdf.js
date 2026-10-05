@@ -13,7 +13,7 @@ import {
   up,
 } from "./common";
 import { amountInWords } from "../numberToWords";
-import { sumItems } from "../calc";
+import { sumItems, roundTotal } from "../calc";
 import { drawSignatureStamp, drawWatermark } from "./pdfBranding";
 
 export function generateDcPdf(doc_, company) {
@@ -213,7 +213,7 @@ export function generateDcPdf(doc_, company) {
   });
 
   y = pdf.lastAutoTable.finalY + 2;
-  const total = sumItems(doc_.items);
+  const total = roundTotal(sumItems(doc_.items));
 
   pdf.setFillColor(235, 239, 243);
   pdf.rect(MARGIN, y, CONTENT_WIDTH, 8, "F");
@@ -284,9 +284,9 @@ export function generateDcPdf(doc_, company) {
   // ================= FOOTER =================
   // ================= FOOTER =================
 
-  let fy = 280;
-
-  fy = drawFooterNote(pdf, fy, company.jurisdiction || "");
+  if (company.showJurisdiction !== false) {
+    drawFooterNote(pdf, 280, company.jurisdiction || "");
+  }
 
   drawFooterNote(pdf, 289, "This is a computer generated document.");
 

@@ -24,6 +24,7 @@ import {
   SectionMemberCard,
   TubeMemberCard,
 } from "../components/decking/DeckingCards";
+import CollapsibleRow from "../components/CollapsibleRow";
 
 const MODE_HINT = {
   peb: "PEB: built-up members (flange + web plates) with connection and gusset plates.",
@@ -46,6 +47,8 @@ export default function DeckingEditor() {
   const navigate = useNavigate();
   const [doc_, setDoc] = useState(() => loadDoc(id));
   const [saved, setSaved] = useState(false);
+  const [closed, setClosed] = useState({});
+  const toggle = (rid) => setClosed((c) => ({ ...c, [rid]: !c[rid] }));
 
   // A brand-new document is only stored once something is typed, so opening
   // and leaving the page never leaves an empty entry in History.
@@ -240,7 +243,8 @@ export default function DeckingEditor() {
         {/* ---------- sections ---------- */}
         {DECK_SECTION_DEFS.map((def, idx) => {
           const rows = getRows(doc_, def.key);
-          const total = summary.sections.find((s) => s.key === def.key)?.total;
+          const sec = summary.sections.find((s) => s.key === def.key);
+          const total = sec?.total;
           return (
             <div key={def.key} className="card space-y-3">
               <div className="flex items-center justify-between">
@@ -262,7 +266,27 @@ export default function DeckingEditor() {
                 </p>
               )}
 
-              {rows.map((row) => renderRow(def, row))}
+              {rows.map((row, i) => (
+                <CollapsibleRow
+                  key={row.id}
+                  title={row.label || def.prefix}
+                  weight={fmtKg(sec?.lines[i]?.weight)}
+                  open={!closed[row.id]}
+                  onToggle={() => toggle(row.id)}
+                >
+                  {renderRow(def, row)}
+                </CollapsibleRow>
+              ))}
+
+              {rows.length > 0 && (
+                <button
+                  type="button"
+                  className="btn-secondary w-full"
+                  onClick={() => addRow(def)}
+                >
+                  + Add {def.title}
+                </button>
+              )}
 
               <div className="rounded-lg bg-steel-100 px-3 py-2 text-xs font-bold text-steel-700">
                 Section Total: {fmtKg(total)} KG

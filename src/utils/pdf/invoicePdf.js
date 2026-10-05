@@ -286,11 +286,14 @@ export function generateInvoicePdf(doc_, company) {
   // FOOTER - 2 LINES AFTER DECLARATION
   // ======================================================
 
-  const footerY = declarationLineY + 8;
+  let footerY = declarationLineY + 8;
 
-  drawFooterNote(pdf, footerY, company.jurisdiction || "");
+  if (company.showJurisdiction !== false) {
+    drawFooterNote(pdf, footerY, company.jurisdiction || "");
+    footerY += 7;
+  }
 
-  drawFooterNote(pdf, footerY + 7, "This is a computer generated invoice.");
+  drawFooterNote(pdf, footerY, "This is a computer generated invoice.");
 
   return pdf;
 }

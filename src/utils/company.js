@@ -13,7 +13,10 @@ export const defaultCompany = {
   bankName: "STATE BANK OF INDIA",
   bankAccountNo: "44766697514",
   bankIfsc: "SBIN0040037",
-  jurisdiction: "SUBJECT TO MYSURE JURISDICTION",
+  jurisdiction: "SUBJECT TO MYSORE JURISDICTION",
+  showJurisdiction: true, // Need / Not Need button
+  unitLineText: "(A unit of AM welding and fabrication)",
+  showUnitLine: true, // Need / Not Need button
   // ADD THIS
   declaration: `1. Please inspect the goods before delivery, Hence forth no claim will be entertained.
 2. Our risk and responsibility ceases after the goods despatch from our godown.
