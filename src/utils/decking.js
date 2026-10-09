@@ -57,6 +57,7 @@ export const DECK_SECTION_DEFS = [
     prefix: "SB",
   },
   { key: "studs", title: "Studs", kind: "stud", prefix: "ST" },
+  { key: "flats", title: "Flats", kind: "flat", prefix: "FL" },
   { key: "boltsNuts", title: "Bolts & Nuts", kind: "bolt", prefix: "BN" },
   { key: "decking", title: "Decking Sheet", kind: "deck", prefix: "DS" },
 ];
@@ -93,7 +94,7 @@ export const emptyConnectionPlate = () => ({
   width: "", // mm
   thickness: "", // mm
   density: String(STEEL_DENSITY),
-  qty: "",
+  qty: "1",
 });
 
 export const emptyGussetPlate = () => ({
@@ -255,6 +256,113 @@ export function boltRowWeight(r) {
   return boltWeight(r?.d, r?.l) * num(r?.qty);
 }
 export const studRowWeight = boltRowWeight;
+// ---------------- FLAT (size x thickness x length ft/m x density) ----------------
+export const emptyFlatRow = (label = "") => ({
+  id: newId(),
+  label,
+  unit: "m", // "m" or "ft"
+  size: "", // width of flat, mm
+  thickness: "", // mm
+  density: String(STEEL_DENSITY),
+  length: "",
+  qty: "",
+});
+export const flatLengthM = (r) =>
+  r?.unit === "ft" ? num(r?.length) * 0.3048 : num(r?.length);
+export function flatRowWeight(r) {
+  return (
+    plateWeight(
+      r?.size,
+      flatLengthM(r),
+      r?.thickness,
+      num(r?.density) || STEEL_DENSITY,
+    ) * num(r?.qty)
+  );
+}
+
+// ---------------- STIFFENER / CLEAT (manual plates, length in mm) ----------------
+export const emptyMiscPlate = () => ({
+  id: newId(),
+  length: "", // mm
+  width: "", // mm
+  thickness: "", // mm
+  density: String(STEEL_DENSITY),
+  qty: "",
+});
+export function miscPlateWeight(p) {
+  return (
+    plateWeight(
+      p?.width,
+      num(p?.length) / 1000,
+      p?.thickness,
+      num(p?.density) || STEEL_DENSITY,
+    ) * num(p?.qty)
+  );
+}
+
+// ---------------- TAPERED WEB + AUTO PLATES ----------------
+export const AUTO_EXTRA = 200; // mm added to web / flange for end plates
+export const AUTO_PITCH = 1.2; // m, one stiffener every 1.2 m
+
+// web a = small end, web b = big end  ->  average web width
+export const webAvg = (row) => {
+  const a = num(row?.webWidth);
+  const b = num(row?.webWidthB);
+  return a > 0 && b > 0 ? (a + b) / 2 : a;
+};
+
+export const emptyAuto = () => ({
+  enabled: true,
+  thickA: "",
+  thickB: "",
+  stiffThick: "",
+  pitch: String(AUTO_PITCH),
+});
+
+export function autoPlates(row) {
+  const au = row?.auto;
+  const a = num(row?.webWidth);
+  const b = num(row?.webWidthB) || a;
+  const F = num(row?.flangeWidth);
+  const L = num(row?.length);
+  const q = num(row?.qty);
+  const pitch = num(au?.pitch) || AUTO_PITCH;
+  const nos = L > 0 ? Math.ceil(L / pitch) : 0;
+  const base = { total: 0, items: [], nos, a, b, F };
+  if (!au?.enabled) return base;
+
+  const wA =
+    plateWeight(a + AUTO_EXTRA, (F + AUTO_EXTRA) / 1000, au.thickA) * q;
+  const wB =
+    plateWeight(b + AUTO_EXTRA, (F + AUTO_EXTRA) / 1000, au.thickB) * q;
+  const wS = plateWeight((a + b) / 2, F / 2 / 1000, au.stiffThick) * nos * q;
+
+  const items = [
+    {
+      size: `End plate A ${a + AUTO_EXTRA} x ${F + AUTO_EXTRA} x ${
+        num(au.thickA) || "?"
+      } mm`,
+      thickness: au.thickA,
+      weight: wA,
+    },
+    {
+      size: `End plate B ${b + AUTO_EXTRA} x ${F + AUTO_EXTRA} x ${
+        num(au.thickB) || "?"
+      } mm`,
+      thickness: au.thickB,
+      weight: wB,
+    },
+    {
+      size: `Stiffener ${(a + b) / 2} x ${F / 2} x ${
+        num(au.stiffThick) || "?"
+      } mm`,
+      thickness: au.stiffThick,
+      weight: wS,
+    },
+  ].filter((i) => i.weight > 0);
+
+  return { ...base, items, total: wA + wB + wS };
+}
 
 // ---------------------------------------------------------------------
 // Member weight helpers
@@ -293,10 +401,16 @@ const thicknessKey = (t) => {
   return n > 0 ? String(n) : "0";
 };
 
-function addThickness(map, t, w) {
+// Builds the size text, e.g. "150 x 6 mm"
+const sizeLabel = (width, t) => `${num(width) || "?"} x ${num(t) || "?"} mm`;
+
+// map[thickness][size] = weight
+function addThickness(map, t, w, size) {
   if (!w) return;
   const k = thicknessKey(t);
-  map[k] = (map[k] || 0) + w;
+  if (!map[k]) map[k] = {};
+  const s = size || "Size not entered";
+  map[k][s] = (map[k][s] || 0) + w;
 }
 
 /**
@@ -313,42 +427,110 @@ export function memberBreakdown(row, mode) {
   const q = num(row?.qty);
   let main = 0;
   let rolled = 0;
+  let flange = 0;
+  let web = 0;
 
   if (mode === "peb") {
-    const flange = plateWeight(row?.flangeWidth, L, row?.flangeThick) * 2 * q;
-    const web = plateWeight(row?.webWidth, L, row?.webThick) * q;
-    addThickness(byThickness, row?.flangeThick, flange);
-    addThickness(byThickness, row?.webThick, web);
+    flange = plateWeight(row?.flangeWidth, L, row?.flangeThick) * 2 * q;
+    web = plateWeight(webAvg(row), L, row?.webThick) * q;
+    addThickness(
+      byThickness,
+      row?.flangeThick,
+      flange,
+      sizeLabel(row?.flangeWidth, row?.flangeThick),
+    );
+    addThickness(
+      byThickness,
+      row?.webThick,
+      web,
+      sizeLabel(webAvg(row), row?.webThick),
+    );
     main = flange + web;
   } else if (mode === "single") {
     rolled = sectionKgm(row) * L * q;
     main = rolled;
   } else {
     main = tubeWeightPerMeter(row) * L * q;
-    addThickness(byThickness, row?.thickness, main);
+    const name =
+      row?.shape === TUBE_SHAPES.ROUND
+        ? `Pipe OD ${num(row.outerDia) || "?"} x ${
+            num(row.thickness) || "?"
+          } mm`
+        : `Tube ${num(row.sideA) || "?"} x ${
+            num(row.sideB) || num(row.sideA) || "?"
+          } x ${num(row.thickness) || "?"} mm`;
+    addThickness(byThickness, row?.thickness, main, name);
   }
 
   let plates = 0;
   (row?.plates || []).forEach((p) => {
     const w = connectionPlateWeight(p);
     plates += w;
-    addThickness(byThickness, p.thickness, w);
+    addThickness(byThickness, p.thickness, w, sizeLabel(p.width, p.thickness));
   });
 
   let gussets = 0;
   (row?.gussets || []).forEach((g) => {
     const w = gussetPlateWeight(g);
     gussets += w;
-    addThickness(byThickness, g.thickness, w);
+    addThickness(byThickness, g.thickness, w, sizeLabel(g.base, g.thickness));
   });
+
+  // additional bolts on the connection plate
+  let bolts = 0;
+  (row?.plateBolts || []).forEach((b) => {
+    bolts += boltWeight(b.d, b.l) * num(b.qty);
+  });
+
+  // manual stiffener plates
+  let stiffeners = 0;
+  (row?.stiffeners || []).forEach((s) => {
+    const w = miscPlateWeight(s);
+    stiffeners += w;
+    addThickness(
+      byThickness,
+      s.thickness,
+      w,
+      `Stiffener ${num(s.width) || "?"} x ${num(s.thickness) || "?"} mm`,
+    );
+  });
+
+  // cleats
+  let cleats = 0;
+  (row?.cleats || []).forEach((c) => {
+    const w = miscPlateWeight(c);
+    cleats += w;
+    addThickness(
+      byThickness,
+      c.thickness,
+      w,
+      `Cleat ${num(c.width) || "?"} x ${num(c.thickness) || "?"} mm`,
+    );
+  });
+
+  // automatic end plates + stiffeners (PEB only)
+  let auto = 0;
+  if (mode === "peb") {
+    const ap = autoPlates(row);
+    auto = ap.total;
+    ap.items.forEach((i) =>
+      addThickness(byThickness, i.thickness, i.weight, i.size),
+    );
+  }
 
   return {
     main,
+    flange,
+    web,
     plates,
     gussets,
+    bolts,
+    stiffeners,
+    cleats,
+    auto,
     rolled,
     byThickness,
-    total: main + plates + gussets,
+    total: main + plates + gussets + bolts + stiffeners + cleats + auto,
   };
 }
 
@@ -414,6 +596,8 @@ export function createRow(def, doc) {
       return emptyStudRow(label);
     case "bolt":
       return emptyBoltRow(label);
+    case "flat":
+      return emptyFlatRow(label);
     case "deck":
       return emptyDeckRow(label);
     default: {
@@ -440,7 +624,9 @@ function memberDetail(row, mode) {
   if (mode === "peb") {
     return `Flange ${row.flangeWidth || 0}x${row.flangeThick || 0}mm, Web ${
       row.webWidth || 0
-    }x${row.webThick || 0}mm, ${size}`;
+    }${row.webWidthB ? `/${row.webWidthB}` : ""}x${
+      row.webThick || 0
+    }mm, ${size}`;
   }
   if (mode === "single") {
     const name =
@@ -475,7 +661,13 @@ const MAIN_LABEL = {
 export function buildDeckingSummary(doc) {
   const mode = modeKey(doc);
   const thicknessMap = {};
-  const other = { rolled: 0, foundationBolts: 0, boltsNuts: 0, studs: 0 };
+  const other = {
+    rolled: 0,
+    foundationBolts: 0,
+    boltsNuts: 0,
+    studs: 0,
+    plateBolts: 0,
+  };
   let grandRaw = 0;
 
   const sections = DECK_SECTION_DEFS.map((def) => {
@@ -492,14 +684,35 @@ export function buildDeckingSummary(doc) {
         weight = b.total;
         detail = memberDetail(row, mode);
         parts = [
-          { label: MAIN_LABEL[mode], weight: b.main },
+          ...(mode === "peb"
+            ? [
+                {
+                  label: `Flanges (2 nos) ${sizeLabel(
+                    row.flangeWidth,
+                    row.flangeThick,
+                  )}`,
+                  weight: b.flange,
+                },
+                {
+                  label: `Web ${sizeLabel(webAvg(row), row.webThick)}`,
+                  weight: b.web,
+                },
+              ]
+            : [{ label: MAIN_LABEL[mode], weight: b.main }]),
           { label: "Connection plates", weight: b.plates },
           { label: "Gusset plates", weight: b.gussets },
+          { label: "Auto end plates + stiffeners", weight: b.auto },
+          { label: "Stiffener plates", weight: b.stiffeners },
+          { label: "Cleats", weight: b.cleats },
+          { label: "Connection plate bolts", weight: b.bolts },
         ].filter((p) => p.weight > 0);
-        Object.entries(b.byThickness).forEach(([t, w]) =>
-          addThickness(thicknessMap, t, w),
+        Object.entries(b.byThickness).forEach(([t, sizes]) =>
+          Object.entries(sizes).forEach(([s, w]) =>
+            addThickness(thicknessMap, t, w, s),
+          ),
         );
         other.rolled += b.rolled;
+        other.plateBolts += b.bolts;
       } else if (def.kind === "foundationBolt") {
         weight = foundationBoltRowWeight(row);
         detail = `${row.pedestals || 0} pedestals x ${
@@ -514,12 +727,23 @@ export function buildDeckingSummary(doc) {
         weight = studRowWeight(row);
         detail = `dia ${row.d || 0} x ${row.l || 0}mm x Qty ${row.qty || 0}`;
         other.studs += weight;
+      } else if (def.kind === "flat") {
+        weight = flatRowWeight(row);
+        detail = `Flat ${row.size || 0} x ${row.thickness || 0}mm, L=${
+          row.length || 0
+        }${row.unit || "m"} x Qty ${row.qty || 0}`;
+        addThickness(
+          thicknessMap,
+          row.thickness,
+          weight,
+          `Flat ${num(row.size) || "?"} x ${num(row.thickness) || "?"} mm`,
+        );
       } else if (def.kind === "deck") {
         weight = deckRowWeight(row);
         detail = `${row.length || 0} x ${row.width || 0} ${row.unit || "m"}, ${
           row.thickness || 0
         }mm sheet @ ${row.weightPerSqft || 0} kg/sq ft`;
-        addThickness(thicknessMap, row.thickness, weight);
+        addThickness(thicknessMap, row.thickness, weight, "Decking sheet");
       }
 
       sectionRaw += weight;
@@ -541,11 +765,20 @@ export function buildDeckingSummary(doc) {
   });
 
   const thicknessRows = Object.entries(thicknessMap)
-    .map(([t, w]) => ({
-      thickness: Number(t),
-      label: t === "0" ? "Thickness not entered" : `${t} mm`,
-      weight: round2(w),
-    }))
+    .map(([t, sizes]) => {
+      const details = Object.entries(sizes)
+        .map(([label, w]) => ({ label, weight: round2(w) }))
+        .sort((a, b) =>
+          a.label.localeCompare(b.label, undefined, { numeric: true }),
+        );
+      const total = Object.values(sizes).reduce((s, w) => s + w, 0);
+      return {
+        thickness: Number(t),
+        label: t === "0" ? "Thickness not entered" : `${t} mm`,
+        weight: round2(total),
+        details,
+      };
+    })
     .sort((a, b) => a.thickness - b.thickness);
 
   const otherRows = [
@@ -553,10 +786,15 @@ export function buildDeckingSummary(doc) {
     { label: "Foundation bolts", weight: round2(other.foundationBolts) },
     { label: "Bolts & nuts", weight: round2(other.boltsNuts) },
     { label: "Studs", weight: round2(other.studs) },
+    { label: "Connection plate bolts", weight: round2(other.plateBolts) },
   ].filter((r) => r.weight > 0);
 
   const otherRaw =
-    other.rolled + other.foundationBolts + other.boltsNuts + other.studs;
+    other.rolled +
+    other.foundationBolts +
+    other.boltsNuts +
+    other.studs +
+    other.plateBolts;
 
   return {
     modeLabel: modeLabel(doc),

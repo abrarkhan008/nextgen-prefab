@@ -7,6 +7,7 @@ import {
   bracingTotalWeight,
   boltWeight,
 } from "./calc";
+import { memberBreakdown } from "./decking";
 // ---- row factories ----
 
 export const emptyPlate = () => ({
@@ -57,18 +58,9 @@ export const emptyBracingRow = (label = "") => ({
 
 // Member weight (flange x2 + web, from calc.js) + its attached connection plate
 export function memberRowWeight(row) {
-  const m = memberRows(row.label, row);
-  const platesTotal = (row.plates || []).reduce((sum, p) => {
-    const pQty = Number(p?.qty) || 0;
-    const pUnitWt = plateWeight(
-      p?.width,
-      p?.length,
-      p?.thickness,
-      Number(p?.density) || STEEL_DENSITY,
-    );
-    return sum + pUnitWt * pQty;
-  }, 0);
-  return round2(m.totalWeight + platesTotal);
+  // one shared formula with the Decking Sheet (tapered web, plates, gussets,
+  // stiffeners, cleats, auto plates, bolts)
+  return round2(memberBreakdown(row, "peb").total);
 }
 export const emptyPurlinRow = (label = "") => ({
   id: newId(),

@@ -20,6 +20,7 @@ import {
   foundationBoltRowWeight,
   boltRowWeight,
   studRowWeight,
+  flatRowWeight,
   memberBreakdown,
   sectionKgm,
   tubeWeightPerMeter,
@@ -28,6 +29,8 @@ import {
 import { boltWeight } from "../../utils/calc";
 import ThicknessInput from "../ThicknessInput";
 import LengthInput from "../LengthInput";
+import PlateBoltsEditor from "./PlateBoltsEditor";
+import ExtraPlates from "./ExtraPlates";
 
 const card = "space-y-1.5 rounded-lg border border-steel-200 p-2";
 
@@ -230,9 +233,9 @@ export function DeckSheetCard({ row, onChange, onRemove }) {
         {fmtKg(deckRowWeight(row))} KG
         <br />
         <span className="font-normal">
-          Length x Width x Weight / Sq Ft. Weight / Sq Ft fills in from the
-          thickness (flat steel) - overwrite it with your supplier's value if
-          the sheet profile is heavier.
+          Length x Width x Weight / Sq Ft. Weight / Sq Ft = thickness (0.8 mm =
+          0.8 kg, 1.0 mm = 1.0 kg, 1.2 mm = 1.2 kg). You can overwrite it if
+          your supplier gives a different value.
         </span>
       </InfoBar>
     </div>
@@ -265,9 +268,14 @@ export function PebMemberCard({ row, onChange, onRemove }) {
             onChange={(v) => set({ flangeThick: v })}
           />
           <NumField
-            label="Web Width (mm)"
+            label="Web Width A (mm) - small end"
             value={row.webWidth}
             onChange={(v) => set({ webWidth: v })}
+          />
+          <NumField
+            label="Web Width B (mm) - big end (blank = same as A)"
+            value={row.webWidthB}
+            onChange={(v) => set({ webWidthB: v })}
           />
           <ThicknessInput
             label="Web Thick (mm)"
@@ -291,6 +299,8 @@ export function PebMemberCard({ row, onChange, onRemove }) {
       </div>
 
       <PlateAttachments row={row} onChange={onChange} />
+      <PlateBoltsEditor row={row} onChange={onChange} />
+      <ExtraPlates row={row} onChange={onChange} showAuto />
       <MemberTotals breakdown={memberBreakdown(row, "peb")} />
     </div>
   );
@@ -401,6 +411,8 @@ export function SectionMemberCard({ row, onChange, onRemove }) {
       </p>
 
       <PlateAttachments row={row} onChange={onChange} />
+      <PlateBoltsEditor row={row} onChange={onChange} />
+      <ExtraPlates row={row} onChange={onChange} />
       <MemberTotals breakdown={memberBreakdown(row, "single")} />
     </div>
   );
@@ -487,9 +499,67 @@ export function TubeMemberCard({ row, onChange, onRemove }) {
         Weight / Piece:{" "}
         {fmtKg(tubeWeightPerMeter(row) * (Number(row.length) || 0))} KG
       </InfoBar>
-
       <PlateAttachments row={row} onChange={onChange} />
+      <PlateBoltsEditor row={row} onChange={onChange} />
+      <ExtraPlates row={row} onChange={onChange} />
       <MemberTotals breakdown={memberBreakdown(row, "tubular")} />
+    </div>
+  );
+}
+// ---------------------------------------------------------------------
+// Flat  (size x thickness x length x density x qty)
+// ---------------------------------------------------------------------
+export function FlatCard({ row, onChange, onRemove }) {
+  const set = (patch) => onChange({ ...row, ...patch });
+  const unit = row.unit || "m";
+  return (
+    <div className={card}>
+      <RowHeader
+        value={row.label}
+        placeholder="Label, e.g. FL1"
+        onChange={(v) => set({ label: v })}
+        onRemove={onRemove}
+      />
+      <div>
+        <label className="field-label">Length in</label>
+        <select
+          className="field-input"
+          value={unit}
+          onChange={(e) => set({ unit: e.target.value })}
+        >
+          <option value="m">Metre (m)</option>
+          <option value="ft">Feet (ft)</option>
+        </select>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <NumField
+          label="Size / Width (mm)"
+          value={row.size}
+          onChange={(v) => set({ size: v })}
+        />
+        <NumField
+          label="Thickness (mm)"
+          value={row.thickness}
+          onChange={(v) => set({ thickness: v })}
+        />
+        <NumField
+          label={`Length (${unit})`}
+          value={row.length}
+          onChange={(v) => set({ length: v })}
+        />
+        <NumField
+          label="Qty"
+          value={row.qty}
+          onChange={(v) => set({ qty: v })}
+        />
+      </div>
+      <NumField
+        label="Density (edit if not 0.00785)"
+        step="0.00001"
+        value={row.density}
+        onChange={(v) => set({ density: v })}
+      />
+      <InfoBar>Total Weight: {fmtKg(flatRowWeight(row))} KG</InfoBar>
     </div>
   );
 }

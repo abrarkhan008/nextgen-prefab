@@ -10,7 +10,7 @@ import {
   fmtDate,
   up,
 } from "./common";
-import { sumItems, roundTotal } from "../calc";
+import { sumItems, roundTotal, gstSummary } from "../calc";
 import { drawWatermark, drawSignatureStamp } from "./pdfBranding";
 
 const PAGE_BOTTOM = 285; // do not write below this line
@@ -36,7 +36,15 @@ export function generateEstimationPdf(doc_, company) {
     }
   };
 
-  const grandTotal = roundTotal(sumItems(doc_.items || []));
+  const gstInfo = gstSummary(
+    doc_.items || [],
+    company.cgstPercent,
+    company.sgstPercent,
+  );
+  const gstPct = (company.cgstPercent || 0) + (company.sgstPercent || 0);
+  const grandTotal = doc_.applyGst
+    ? gstInfo.grandTotal
+    : roundTotal(sumItems(doc_.items || []));
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9.5);
@@ -82,7 +90,47 @@ export function generateEstimationPdf(doc_, company) {
       fmtMoney(it.rate),
       fmtMoney(it.amount),
     ]),
-    foot: [["", up(doc_.designNote), "", "TOTAL", "", fmtMoney(grandTotal)]],
+    foot: doc_.applyGst
+      ? [
+          [
+            "",
+            up(doc_.designNote),
+            { content: "SUB TOTAL", colSpan: 3, styles: { halign: "right" } },
+            {
+              content: fmtMoney(gstInfo.subTotal),
+              styles: { halign: "right" },
+            },
+          ],
+          [
+            "",
+            "",
+            {
+              content: `GST ${gstPct}%`,
+              colSpan: 3,
+              styles: { halign: "right" },
+            },
+            {
+              content: fmtMoney(gstInfo.cgst + gstInfo.sgst),
+              styles: { halign: "right" },
+            },
+          ],
+          [
+            "",
+            "",
+            { content: "R OFF (+/-)", colSpan: 3, styles: { halign: "right" } },
+            {
+              content: fmtMoney(gstInfo.roundOff),
+              styles: { halign: "right" },
+            },
+          ],
+          [
+            "",
+            "",
+            { content: "GRAND TOTAL", colSpan: 3, styles: { halign: "right" } },
+            { content: fmtMoney(grandTotal), styles: { halign: "right" } },
+          ],
+        ]
+      : [["", up(doc_.designNote), "", "TOTAL", "", fmtMoney(grandTotal)]],
     theme: "grid",
     styles: {
       font: "helvetica",
@@ -152,6 +200,7 @@ export function generateEstimationPdf(doc_, company) {
   pdf.setFont("helvetica", "normal");
   (doc_.notes || [])
     .filter((n) => (n || "").trim() !== "")
+    .filter((n) => !(doc_.applyGst && /gst/i.test(n)))
     .forEach((n, i) => {
       const lines = pdf.splitTextToSize(up(`${i + 1}.${n}`), CONTENT_WIDTH);
       ensureSpace(lines.length * 4.4);

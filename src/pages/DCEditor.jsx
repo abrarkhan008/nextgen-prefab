@@ -175,6 +175,14 @@ export default function DCEditor() {
                 value={doc_.ewayBillNo}
                 onChange={(e) => update({ ewayBillNo: e.target.value })}
               />
+              <a
+                href="https://ewaybillgst.gov.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-block text-xs font-bold text-blue-600 underline"
+              >
+                Open E-way Bill portal ↗
+              </a>
             </div>
           )}
           <div className="col-span-2">
@@ -306,11 +314,6 @@ export default function DCEditor() {
         </div>
       </div>
 
-      <ActionBar
-        onSave={handleSave}
-        onDownload={handleDownload}
-        onShare={handleShare}
-      />
       <ActionBar
         onSave={handleSave}
         onPreview={handlePreview}

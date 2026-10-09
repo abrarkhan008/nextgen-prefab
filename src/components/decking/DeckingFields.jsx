@@ -54,6 +54,13 @@ export function MemberTotals({ breakdown }) {
       <div>Main member: {fmtKg(b.main)} KG</div>
       {b.plates > 0 && <div>Connection plates: {fmtKg(b.plates)} KG</div>}
       {b.gussets > 0 && <div>Gusset plates: {fmtKg(b.gussets)} KG</div>}
+      {b.auto > 0 && (
+        <div>Auto end plates + stiffeners: {fmtKg(b.auto)} KG</div>
+      )}
+      {b.stiffeners > 0 && (
+        <div>Stiffener plates: {fmtKg(b.stiffeners)} KG</div>
+      )}
+      {b.cleats > 0 && <div>Cleats: {fmtKg(b.cleats)} KG</div>}
       <div className="font-bold text-steel-800">
         Total Weight: {fmtKg(b.total)} KG
       </div>

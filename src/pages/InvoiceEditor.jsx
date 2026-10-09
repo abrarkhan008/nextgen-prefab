@@ -192,6 +192,14 @@ export default function InvoiceEditor() {
               value={doc_.ewayBillNo}
               onChange={(e) => update({ ewayBillNo: e.target.value })}
             />
+            <a
+              href="https://ewaybillgst.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-block text-xs font-bold text-blue-600 underline"
+            >
+              Open E-way Bill portal ↗
+            </a>
           </div>
           <div className="col-span-2">
             <label className="field-label">Terms of Delivery</label>

@@ -69,7 +69,7 @@ export function gstSummary(items, cgstPercent, sgstPercent) {
   const cgst = round2((subTotal * (Number(cgstPercent) || 0)) / 100);
   const sgst = round2((subTotal * (Number(sgstPercent) || 0)) / 100);
   const rawTotal = subTotal + cgst + sgst;
-  const grandTotal = Math.round(rawTotal);
+    const grandTotal = roundTotal(rawTotal);
   const roundOff = round2(grandTotal - rawTotal);
   return { subTotal, cgst, sgst, roundOff, grandTotal };
 }

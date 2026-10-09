@@ -37,21 +37,24 @@ import BuildingPlanForm from "../components/BuildingPlanForm";
 import CollapsibleRow from "../components/CollapsibleRow";
 import ThicknessInput from "../components/ThicknessInput";
 import LengthInput from "../components/LengthInput";
+import PlateBoltsEditor from "../components/decking/PlateBoltsEditor";
+import ExtraPlates from "../components/decking/ExtraPlates";
+import { NumField } from "../components/decking/DeckingFields";
 
 // Same formulas already used in QuotationEditor.jsx, repeated here so this
 // page shows the identical numbers without importing a page component.
-function foundationBoltTotalWeight(f) {
-  const pedestals = Number(f?.pedestals) || 0;
-  const boltsPerPedestal = Number(f?.boltsPerPedestal) || 0;
+// function foundationBoltTotalWeight(f) {
+//   const pedestals = Number(f?.pedestals) || 0;
+//   const boltsPerPedestal = Number(f?.boltsPerPedestal) || 0;
 
-  const diameter = Number(f?.diameter) || 0;
-  const length = Number(f?.length) || 0;
+//   const diameter = Number(f?.diameter) || 0;
+//   const length = Number(f?.length) || 0;
 
-  const totalBolts = pedestals * boltsPerPedestal;
-  const singleBoltWeight = boltWeight(diameter, length);
+//   const totalBolts = pedestals * boltsPerPedestal;
+//   const singleBoltWeight = boltWeight(diameter, length);
 
-  return round2(totalBolts * singleBoltWeight);
-}
+//   return round2(totalBolts * singleBoltWeight);
+// }
 function purlinTotalWeight(p) {
   return purlinSectionWeight(p).totalWeight;
 }
@@ -59,6 +62,21 @@ function fmt(n) {
   return (Number(n) || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
 
+const emptyFoundationRow = (label = "") => ({
+  id: newId(),
+  label,
+  pedestals: "",
+  boltsPerPedestal: "",
+  diameter: "",
+  length: "",
+});
+function foundationRowWeight(f) {
+  return (
+    (Number(f?.pedestals) || 0) *
+    (Number(f?.boltsPerPedestal) || 0) *
+    boltWeight(f?.diameter, f?.length)
+  );
+}
 function MemberRowCard({ row, onChange, onRemove }) {
   const weight = memberRowWeight(row);
   const set = (patch) => onChange({ ...row, ...patch });
@@ -170,6 +188,29 @@ function MemberRowCard({ row, onChange, onRemove }) {
               className="field-input"
               value={row.webWidth}
               onChange={(e) => set({ webWidth: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="field-label">
+              Web Width B (mm) - big end (blank = same as A)
+            </label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.webWidthB || ""}
+              onChange={(e) => set({ webWidthB: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="field-label">
+              Web Width B (mm) - big end (blank = same as A)
+            </label>
+            <input
+              type="number"
+              className="field-input"
+              value={row.webWidthB || ""}
+              onChange={(e) => set({ webWidthB: e.target.value })}
             />
           </div>
 
@@ -305,6 +346,8 @@ function MemberRowCard({ row, onChange, onRemove }) {
       >
         + Add Connection Plate
       </button>
+      <PlateBoltsEditor row={row} onChange={onChange} />
+      <ExtraPlates row={row} onChange={onChange} showAuto withGussets />
 
       <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
         Computed Weight: {fmt(weight)} KG
@@ -604,15 +647,11 @@ function BracingRowCard({ row, onChange, onRemove }) {
             />
           </div>
           {row.type === "Pipe Bracing" && (
-            <div>
-              <label className="field-label">2. Thickness (mm)</label>
-              <input
-                type="number"
-                className="field-input"
-                value={row.thickness}
-                onChange={(e) => set({ thickness: e.target.value })}
-              />
-            </div>
+            <ThicknessInput
+              label="2. Thickness (mm)"
+              value={row.thickness}
+              onChange={(v) => set({ thickness: v })}
+            />
           )}
           <div>
             <label className="field-label">Qty</label>
@@ -739,9 +778,30 @@ export default function QuotationWorkout() {
       navigate("/quotation/new");
       return;
     }
+    const old = existing.project?.foundationBolt;
+    const hasOld =
+      old &&
+      (old.pedestals || old.boltsPerPedestal || old.diameter || old.length);
     setDoc({
       ...existing,
       workout: { ...blankWorkout(), ...existing.workout },
+      project: {
+        ...existing.project,
+        foundationBolts:
+          existing.project?.foundationBolts ??
+          (hasOld
+            ? [
+                {
+                  id: newId(),
+                  label: "CL1",
+                  pedestals: old.pedestals || "",
+                  boltsPerPedestal: old.boltsPerPedestal || "",
+                  diameter: old.diameter || "",
+                  length: old.length || "",
+                },
+              ]
+            : []),
+      },
     });
   }, [id, navigate]);
 
@@ -791,10 +851,27 @@ export default function QuotationWorkout() {
       return ((Number(r.size) || 0) ** 2 / 162) * (Number(r.qty) || 0);
     return rateRowWeight(r);
   };
-
-  const foundationWeight = foundationBoltTotalWeight(
-    doc_.project.foundationBolt,
+  const foundationRows = doc_.project.foundationBolts || [];
+  const foundationWeight = round2(
+    foundationRows.reduce((s, f) => s + foundationRowWeight(f), 0),
   );
+  const addFoundationRow = () =>
+    updateProject({
+      foundationBolts: [
+        ...foundationRows,
+        emptyFoundationRow(`CL${foundationRows.length + 1}`),
+      ],
+    });
+  const updateFoundationRow = (rid, patch) =>
+    updateProject({
+      foundationBolts: foundationRows.map((r) =>
+        r.id === rid ? { ...r, ...patch } : r,
+      ),
+    });
+  const removeFoundationRow = (rid) =>
+    updateProject({
+      foundationBolts: foundationRows.filter((r) => r.id !== rid),
+    });
   const purlins = doc_.project.purlins || [];
   const purlinWeight = purlins.reduce(
     (sum, p) => sum + purlinSectionWeight(p).totalWeight,
@@ -963,94 +1040,89 @@ export default function QuotationWorkout() {
         >
           📋 Generate from Building Plan
         </button>
-        {/* 1. Base Plate / Foundation Bolts */}
+        {/* 1. Foundation Bolts */}
         <div className="card space-y-3">
-          <p className="text-sm font-bold text-steel-800">
-            1. Base Plate / Foundation Bolts
-          </p>
-          <div className="flex gap-3">
-            {/* LEFT SIDE - INPUTS */}
-            <div className="flex-1 space-y-2">
-              <div>
-                <label className="field-label">No. of Pedestals</label>
-                <input
-                  type="number"
-                  className="field-input"
-                  value={doc_.project.foundationBolt.pedestals}
-                  onChange={(e) =>
-                    updateProject({
-                      foundationBolt: {
-                        ...doc_.project.foundationBolt,
-                        pedestals: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="field-label">No of Bolts</label>
-                <input
-                  type="number"
-                  className="field-input"
-                  value={doc_.project.foundationBolt.boltsPerPedestal}
-                  onChange={(e) =>
-                    updateProject({
-                      foundationBolt: {
-                        ...doc_.project.foundationBolt,
-                        boltsPerPedestal: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Bolt Diameter (mm)
-                </label>
-                <input
-                  type="number"
-                  placeholder="Example: 20"
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-                  value={doc_.project.foundationBolt.diameter || ""}
-                  onChange={(e) =>
-                    updateProject({
-                      foundationBolt: {
-                        ...doc_.project.foundationBolt,
-                        diameter: e.target.value,
-                      },
-                    })
-                  }
-                />
-
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Bolt Length (mm)
-                </label>
-                <input
-                  type="number"
-                  placeholder="Example: 600"
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-                  value={doc_.project.foundationBolt.length || ""}
-                  onChange={(e) =>
-                    updateProject({
-                      foundationBolt: {
-                        ...doc_.project.foundationBolt,
-                        length: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* RIGHT SIDE - DIAGRAM */}
-            <div className="flex w-32 shrink-0 items-center justify-center">
-              <FoundationBoltDiagram />
-            </div>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-steel-800">
+              1. Foundation Bolts
+            </p>
+            <button
+              className="btn-secondary px-3 py-1 text-xs"
+              onClick={addFoundationRow}
+            >
+              + Add
+            </button>
           </div>
-          <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
-            Computed Weight: {fmt(foundationWeight)} KG
+
+          {foundationRows.length === 0 && (
+            <p className="text-xs text-steel-400">No rows yet. Tap + Add.</p>
+          )}
+
+          {foundationRows.map((f) => (
+            <CollapsibleRow
+              key={f.id}
+              title={f.label}
+              weight={fmt(foundationRowWeight(f))}
+              open={!closed[f.id]}
+              onToggle={() => toggle(f.id)}
+            >
+              <div className="space-y-1.5 rounded-lg border border-steel-200 p-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    className="field-input flex-1"
+                    placeholder="Label, e.g. CL1"
+                    value={f.label}
+                    onChange={(e) =>
+                      updateFoundationRow(f.id, { label: e.target.value })
+                    }
+                  />
+                  <button
+                    className="text-xs font-bold text-red-500"
+                    onClick={() => removeFoundationRow(f.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex-1 space-y-2">
+                    {[
+                      ["pedestals", "No. of Pedestals"],
+                      ["boltsPerPedestal", "No. of Bolts per Pedestal"],
+                      ["diameter", "Bolt Diameter (mm)"],
+                      ["length", "Bolt Length (mm)"],
+                    ].map(([k, lbl]) => (
+                      <div key={k}>
+                        <label className="field-label">{lbl}</label>
+                        <input
+                          type="number"
+                          className="field-input"
+                          value={f[k]}
+                          onChange={(e) =>
+                            updateFoundationRow(f.id, { [k]: e.target.value })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex w-32 shrink-0 items-center justify-center">
+                    <FoundationBoltDiagram />
+                  </div>
+                </div>
+                <div className="rounded-lg bg-steel-50 px-3 py-2 text-xs font-semibold text-steel-600">
+                  Computed Weight: {fmt(foundationRowWeight(f))} KG
+                </div>
+              </div>
+            </CollapsibleRow>
+          ))}
+
+          {foundationRows.length > 0 && (
+            <button className="btn-secondary w-full" onClick={addFoundationRow}>
+              + Add Foundation Bolt
+            </button>
+          )}
+
+          <div className="rounded-lg bg-steel-100 px-3 py-2 text-xs font-bold text-steel-700">
+            Foundation Bolts Total: {fmt(foundationWeight)} KG
           </div>
         </div>
 

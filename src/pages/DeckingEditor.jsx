@@ -20,6 +20,7 @@ import {
   BoltNutCard,
   StudCard,
   DeckSheetCard,
+  FlatCard,
   PebMemberCard,
   SectionMemberCard,
   TubeMemberCard,
@@ -115,6 +116,8 @@ export default function DeckingEditor() {
         return <StudCard key={row.id} {...props} />;
       case "bolt":
         return <BoltNutCard key={row.id} {...props} />;
+      case "flat":
+        return <FlatCard key={row.id} {...props} />;
       case "deck":
         return <DeckSheetCard key={row.id} {...props} />;
       default:

@@ -9,7 +9,11 @@ import {
   rateRowWeight,
   blankWorkout,
 } from "../utils/workout";
-import { bracingTotalWeight, purlinSectionWeight } from "../utils/calc";
+import {
+  bracingTotalWeight,
+  purlinSectionWeight,
+  boltWeight,
+} from "../utils/calc";
 
 function foundationBoltTotalWeight(f) {
   const pedestals = Number(f?.pedestals) || 0;
@@ -45,7 +49,14 @@ export default function WorkoutSummary() {
 
   const lines = [];
 
-  const fb = foundationBoltTotalWeight(doc_.project.foundationBolt);
+  const fb = (doc_.project.foundationBolts || []).reduce(
+    (s, f) =>
+      s +
+      (Number(f.pedestals) || 0) *
+        (Number(f.boltsPerPedestal) || 0) *
+        boltWeight(f.diameter, f.length),
+    0,
+  );
   if (fb) lines.push({ label: "FOUNDATION BOLTS", weight: fb });
 
   SECTIONS.forEach((section) => {

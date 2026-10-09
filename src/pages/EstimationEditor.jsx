@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import ActionBar from "../components/ActionBar";
-import { roundTotal } from "../utils/calc";
+import { roundTotal, gstSummary } from "../utils/calc";
 import {
   getDocument,
   saveDocument,
@@ -44,6 +44,7 @@ function blankDoc() {
     items: [emptyEstItem()],
     designNote: "",
     materialUsed: "",
+    applyGst: false,
     notes: [...DEFAULT_NOTES],
   };
 }
@@ -81,9 +82,23 @@ export default function EstimationEditor() {
   const removeItem = (itemId) =>
     setDoc((d) => ({ ...d, items: d.items.filter((it) => it.id !== itemId) }));
 
-  const grandTotal = roundTotal(
-    doc_.items.reduce((s, it) => s + (Number(it.amount) || 0), 0),
-  );
+  const gst = gstSummary(doc_.items, company.cgstPercent, company.sgstPercent);
+  const gstPercent = (company.cgstPercent || 0) + (company.sgstPercent || 0);
+  const grandTotal = doc_.applyGst
+    ? gst.grandTotal
+    : roundTotal(doc_.items.reduce((s, it) => s + (Number(it.amount) || 0), 0));
+
+  // Tick = GST below total (remove GST line from notes)
+  // Untick = GST in notes (add the line back)
+  const toggleGst = (checked) =>
+    setDoc((d) => {
+      const rest = (d.notes || []).filter((n) => !/gst/i.test(n || ""));
+      return {
+        ...d,
+        applyGst: checked,
+        notes: checked ? rest : [...rest, `${gstPercent}% GST extra.`],
+      };
+    });
 
   const linesToArray = (text) => (text || "").split("\n");
   const arrayToLines = (arr) => (arr || []).join("\n");
@@ -164,6 +179,14 @@ export default function EstimationEditor() {
         <div>
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-bold text-steel-800">Items</p>
+            <label className="flex items-center gap-2 text-xs font-semibold text-steel-600">
+              <input
+                type="checkbox"
+                checked={!!doc_.applyGst}
+                onChange={(e) => toggleGst(e.target.checked)}
+              />
+              Apply GST below total
+            </label>
           </div>
           <div className="space-y-3">
             {doc_.items.map((it, idx) => (
@@ -268,7 +291,9 @@ export default function EstimationEditor() {
         </div>
 
         <div className="card flex items-center justify-between">
-          <span className="text-sm font-bold text-steel-800">TOTAL</span>
+          <span className="text-sm font-bold text-steel-800">
+            {doc_.applyGst ? "GRAND TOTAL (incl. GST)" : "TOTAL"}
+          </span>
           <span className="font-mono text-base font-bold text-steel-900">
             ₹{" "}
             {Number(grandTotal || 0).toLocaleString("en-IN", {

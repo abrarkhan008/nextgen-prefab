@@ -117,16 +117,24 @@ export default function DeckingSummary() {
               thickness.
             </p>
             {summary.thicknessRows.map((r) => (
-              <div
-                key={r.label}
-                className="flex items-center justify-between border-t border-steel-100 pt-2"
-              >
-                <span className="text-sm font-semibold text-steel-800">
-                  {r.label}
-                </span>
-                <span className="font-mono text-sm font-bold text-steel-900">
-                  {fmtKg(r.weight)} KG
-                </span>
+              <div key={r.label} className="border-t border-steel-100 pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-steel-800">
+                    {r.label}
+                  </span>
+                  <span className="font-mono text-sm font-bold text-steel-900">
+                    {fmtKg(r.weight)} KG
+                  </span>
+                </div>
+                {r.details.map((d) => (
+                  <div
+                    key={d.label}
+                    className="flex justify-between pl-3 text-xs text-steel-500"
+                  >
+                    <span>{d.label}</span>
+                    <span className="font-mono">{fmtKg(d.weight)} KG</span>
+                  </div>
+                ))}
               </div>
             ))}
             <div className="flex items-center justify-between rounded-lg bg-steel-100 px-3 py-2 text-xs font-bold text-steel-700">

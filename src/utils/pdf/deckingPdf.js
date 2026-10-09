@@ -149,9 +149,28 @@ export function generateDeckingPdf(doc_, company) {
       startY: y,
       head: [["THICKNESS", "WEIGHT (KG)"]],
       body: [
-        ...summary.thicknessRows.map((r) => [
-          r.label,
-          { content: fmtKg(r.weight), styles: { halign: "right" } },
+        ...summary.thicknessRows.flatMap((r) => [
+          [
+            { content: r.label, styles: { fontStyle: "bold" } },
+            {
+              content: fmtKg(r.weight),
+              styles: { halign: "right", fontStyle: "bold" },
+            },
+          ],
+          ...r.details.map((d) => [
+            {
+              content: `     ${d.label}`,
+              styles: { textColor: [90, 100, 110], fontSize: 7.5 },
+            },
+            {
+              content: fmtKg(d.weight),
+              styles: {
+                halign: "right",
+                textColor: [90, 100, 110],
+                fontSize: 7.5,
+              },
+            },
+          ]),
         ]),
         [
           {
