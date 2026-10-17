@@ -28,6 +28,12 @@ const TYPE_META = {
     icon: "🏗️",
     path: "/decking",
   },
+  drawing: {
+    label: "PEB Drawing",
+    color: "bg-cyan-700",
+    icon: "📐",
+    path: "/drawing",
+  },
 };
 
 export default function Home() {

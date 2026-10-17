@@ -13,6 +13,7 @@ import GstPayment from "./pages/GstPayment";
 import EstimationEditor from "./pages/EstimationEditor";
 import DeckingEditor from "./pages/DeckingEditor";
 import DeckingSummary from "./pages/DeckingSummary";
+import DrawingEditor from "./pages/DrawingEditor";
 export default function App() {
   return (
     <HashRouter>
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/estimation/:id" element={<EstimationEditor />} />
           <Route path="/decking/:id" element={<DeckingEditor />} />
           <Route path="/decking/:id/summary" element={<DeckingSummary />} />
+          <Route path="/drawing/:id" element={<DrawingEditor />} />
         </Routes>
       </div>
     </HashRouter>
