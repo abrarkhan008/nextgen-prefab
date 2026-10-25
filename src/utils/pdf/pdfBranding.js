@@ -38,10 +38,13 @@ export function drawSignatureStamp(pdf, sigY, company, opts = {}) {
   }
 }
 
+let cachedProps = null;
+
 export function drawWatermark(pdf) {
   try {
-    // Get the real image dimensions
-    const props = pdf.getImageProperties(watermarkImage);
+    // Read the image size only once, not on every page
+    if (!cachedProps) cachedProps = pdf.getImageProperties(watermarkImage);
+    const props = cachedProps;
 
     const imageWidth = props.width;
     const imageHeight = props.height;

@@ -64,6 +64,11 @@ export function generateEstimationPdf(doc_, company) {
   });
   y += 5;
 
+  if (doc_.client?.showGstin && doc_.client?.gstin?.trim()) {
+    pdf.text(`GSTIN : ${up(doc_.client.gstin)}`, MARGIN, y);
+    y += 5;
+  }
+
   if (doc_.client?.address) {
     pdf.text(up(doc_.client.address), MARGIN, y);
     y += 5;

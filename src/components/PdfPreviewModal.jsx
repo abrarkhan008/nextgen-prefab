@@ -12,39 +12,62 @@ export default function PdfPreviewModal({ pdf, filename, onClose }) {
   useEffect(() => {
     if (!pdf) return;
     let cancelled = false;
+    let loadingTask = null;
     setLoading(true);
 
     async function render() {
-      const arrayBuffer = pdf.output("arraybuffer");
-      const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const container = containerRef.current;
+      if (!container) return;
+      container.innerHTML = "";
 
-      if (cancelled || !containerRef.current) return;
-      containerRef.current.innerHTML = "";
+      const data = new Uint8Array(pdf.output("arraybuffer"));
+            loadingTask = pdfjsLib.getDocument({ data });
+      const pdfDoc = await loadingTask.promise;
+      if (cancelled) return;
 
-      for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-        const page = await pdfDoc.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 1.5 });
+         const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const targetWidth = (container.clientWidth || window.innerWidth) * dpr;
 
+      const first = await pdfDoc.getPage(1);
+      const base = first.getViewport({ scale: 1 });
+      const scale = targetWidth / base.width;
+
+      const canvases = [];
+      for (let i = 1; i <= pdfDoc.numPages; i++) {
         const canvas = document.createElement("canvas");
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        canvas.width = Math.floor(base.width * scale);
+        canvas.height = Math.floor(base.height * scale);
         canvas.style.width = "100%";
+        canvas.style.background = "#fff";
         canvas.style.marginBottom = "8px";
         canvas.style.boxShadow = "0 1px 4px rgba(0,0,0,0.3)";
-
-        const ctx = canvas.getContext("2d");
-        await page.render({ canvasContext: ctx, viewport }).promise;
-
-        if (cancelled) return;
-        containerRef.current.appendChild(canvas);
+        container.appendChild(canvas);
+        canvases.push(canvas);
       }
 
+      await Promise.all(
+        canvases.map(async (canvas, idx) => {
+          const page = idx === 0 ? first : await pdfDoc.getPage(idx + 1);
+          if (cancelled) return;
+          const viewport = page.getViewport({ scale });
+          await page.render({
+            canvasContext: canvas.getContext("2d"),
+            viewport,
+          }).promise;
+          if (idx === 0 && !cancelled) setLoading(false);
+        }),
+      );
       if (!cancelled) setLoading(false);
     }
 
-    render();
+    render().catch((e) => {
+      console.error("Preview failed:", e);
+      setLoading(false);
+    });
+
     return () => {
       cancelled = true;
+            if (loadingTask) loadingTask.destroy();
     };
   }, [pdf]);
 

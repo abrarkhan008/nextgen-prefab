@@ -40,7 +40,7 @@ function blankDoc() {
     type: "estimation",
     docNo: getNextNumber("estimation"),
     date: new Date().toISOString().slice(0, 10),
-    client: { name: "", address: "" },
+    client: { name: "", address: "", showGstin: false, gstin: "" },
     items: [emptyEstItem()],
     designNote: "",
     materialUsed: "",
@@ -124,7 +124,10 @@ export default function EstimationEditor() {
 
   const handlePreview = () => {
     saveDocument(doc_);
-    setPreviewPdf(buildPdf());
+    console.time("buildPdf");
+    const p = buildPdf();
+    console.timeEnd("buildPdf");
+    setPreviewPdf(p);
   };
   const handleShare = async () => {
     saveDocument(doc_);
@@ -165,6 +168,27 @@ export default function EstimationEditor() {
               value={doc_.client.name}
               onChange={(e) => updateClient({ name: e.target.value })}
             />
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-xs font-semibold text-steel-600">
+              <input
+                type="checkbox"
+                checked={!!doc_.client.showGstin}
+                onChange={(e) => updateClient({ showGstin: e.target.checked })}
+              />
+              Add Client GST Number
+            </label>
+            {doc_.client.showGstin && (
+              <input
+                className="field-input mt-2 uppercase"
+                placeholder="e.g. 29ABCDE1234F1Z5"
+                maxLength={15}
+                value={doc_.client.gstin || ""}
+                onChange={(e) =>
+                  updateClient({ gstin: e.target.value.toUpperCase() })
+                }
+              />
+            )}
           </div>
           <div>
             <label className="field-label">Address</label>
